@@ -355,3 +355,106 @@ uint64_t orange_hexstr_to_hex64(char* s, int* is_more, int* bits)
 	}
 	return val;
 }
+
+unsigned int orange_get_current_time_in_msec(void)
+{
+	struct timeval tv;
+
+	if (gettimeofday(&tv, NULL) < 0) {
+		return 0;
+	}
+
+	return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
+
+void orange_wait_msecs(unsigned int msecs)
+{
+	struct timespec delay_time, elasped_time;
+
+	delay_time.tv_sec  = msecs / 1000;
+	delay_time.tv_nsec = (msecs % 1000) * 1000000;
+
+	nanosleep(&delay_time, &elasped_time);
+}
+
+int orange_get_hostname(char* hostname, int size)
+{
+	int status;
+
+	hostname[0] = 0;
+
+	status = gethostname(hostname, size);
+	if (status < 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int orange_print_task_info(void)
+{
+	char str_pid[6]					= {0};
+	char cmd_line[MAXPATH + 20]		= {0};
+	int __attribute__((unused)) ret = 0;
+
+	ret = system("cat /proc/meminfo ");
+
+	sprintf(str_pid, "%d", getpid());
+	sprintf(cmd_line, "ls -l /proc/%s/task", str_pid);
+
+	ret = system(cmd_line);
+
+	return 0;
+}
+
+int orange_do_system(const char* x, int timeout)
+{
+	FILE*		   fp;
+	int			   ret = -1;
+	int			   rc  = 0;
+	char		   line[200];
+	struct timeval waittime;
+	fd_set		   rfds;
+	int			   fd;
+
+	fp = popen(x, "r");
+	if (NULL == fp) {
+		return -1;
+	}
+
+	fd = fileno(fp);
+	for (;;) {
+		fflush(stdout);
+
+		if (timeout <= 0) {
+			timeout = 2;
+		}
+		waittime.tv_sec  = timeout;
+		waittime.tv_usec = 0;
+
+		FD_ZERO(&rfds);
+		FD_SET(fd, &rfds);
+
+		ret = select(fd + 1, &rfds, 0, 0, &waittime);
+		if (ret > 0) {
+			if (fgets(line, 200, fp) == NULL) {
+				break;
+			}
+			if (fputs(line, stdout) == EOF) {
+				printf("fputs error to pipe");
+			}
+		} else {
+			break;
+		}
+	}
+
+	rc = pclose(fp);
+	if (rc != -1) {
+		ret = 0;
+	}
+	if (ret == -1) {
+		orange_print_task_info();
+	}
+
+	return ret;
+}

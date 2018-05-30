@@ -2,6 +2,7 @@
 #define __ORANGE_UTILS_H__
 
 #include "orange.h"
+#define MAXPATH 256
 
 extern uint32_t orange_atoi(const char* s);
 extern uint64_t orange_atoi_64(const char* s);
@@ -115,5 +116,10 @@ static inline void orange_trim(char* s)
 }
 
 uint64_t orange_hexstr_to_hex64(char* s, int* is_more, int* bits);
+int orange_do_system(const char* x, int timeout);
+int orange_print_task_info(void);
+int orange_get_hostname(char* hostname, int size);
+void orange_wait_msecs(unsigned int msecs);
+unsigned int orange_get_current_time_in_msec(void);
 
 #endif //__ORANGE_UTILS_H__
