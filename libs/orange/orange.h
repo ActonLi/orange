@@ -49,6 +49,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#define ORANGE_TIMEOUT_NONE ((UINT32) 0)	 // no timeout
+#define ORANGE_TIMEOUT_FOREVER ((UINT32) -1) // wait forever
+#define ORANGE_TIMEOUT_TIMED ((UINT32) -2)   // wait for 800ms
+
 #define orange_malloc(size) malloc((size))
 #define orange_zalloc(size) calloc(1, (size))
 #define orange_zalloc_wait(size) calloc(1, (size))
