@@ -80,6 +80,10 @@ extern __thread uint8_t orange_cpu_id;
 #define min(a, b) ((a) > (b) ? (b) : (a))
 #endif
 
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 #define strlen_min(str, min_len) (min(strlen(str), min_len - 1))
 
 #endif // __ORANGE_H__
