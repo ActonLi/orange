@@ -278,17 +278,69 @@ exit:
 
 int orange_thread_get_self_thread_handle(struct orange_thread_handle* selft_thread_handle)
 {
-	return 0;
+	int ret = -1;
+
+	if ((NULL == selft_thread_handle)) {
+		goto exit;
+	}
+
+	selft_thread_handle->hndl = pthread_self();
+	if ((selft_thread_handle->hndl == ORANGE_THREAD_HANDLE_INVLALID) || (selft_thread_handle->hndl == 0)) {
+		goto exit;
+	}
+
+	ret = 0;
+exit:
+	return ret;
 }
 
 int orange_thread_set_thread_pri(struct orange_thread_handle* pthread, int new_pri)
 {
-	return 0;
+	int				   ret = -1;
+	int				   policy;
+	struct sched_param st_sched_param;
+
+	if ((NULL == pthread)) {
+		goto exit;
+	}
+
+	memset(&st_sched_param, 0, sizeof(st_sched_param));
+
+	new_pri = (new_pri < 0) ? 0 : new_pri;
+	new_pri = (new_pri > ORANGE_THR_PRI_RR_MAX) ? ORANGE_THR_PRI_RR_MAX : new_pri;
+
+	ret = pthread_getschedparam(pthread->hndl, &policy, &st_sched_param);
+	if (0 != ret) {
+		goto exit;
+	}
+
+	st_sched_param.sched_priority = new_pri;
+
+	ret = pthread_setschedparam(pthread->hndl, policy, &st_sched_param);
+
+exit:
+	return ret;
 }
 
 int orange_thread_get_thread_pri(struct orange_thread_handle* pthread)
 {
-	return 0;
+	int				   ret = -1;
+	int				   policy;
+	struct sched_param st_sched_param;
+
+	if ((NULL == pthread)) {
+		goto exit;
+	}
+
+	memset(&st_sched_param, 0, sizeof(st_sched_param));
+
+	ret = pthread_getschedparam(pthread->hndl, &policy, &st_sched_param);
+	if (0 == ret) {
+		ret = st_sched_param.sched_priority;
+	}
+
+exit:
+	return ret;
 }
 
 int orange_thread_compare(struct orange_thread_handle* pthread_a, struct orange_thread_handle* pthread_b)
