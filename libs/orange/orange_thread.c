@@ -180,32 +180,100 @@ exit:
 
 int orange_thread_change_pri(struct orange_thread_handle* hndl, uint32_t pri)
 {
-	return 0;
+	int				   ret = -1;
+	struct sched_param schedprm;
+
+	if (pri > (uint32_t) ORANGE_THR_PRI_RR_MAX) {
+		pri = ORANGE_THR_PRI_RR_MAX;
+	} else if (pri < (uint32_t) ORANGE_THR_PRI_RR_MIN) {
+		pri = ORANGE_THR_PRI_RR_MIN;
+	}
+
+	schedprm.sched_priority = pri;
+	ret |= pthread_setschedparam(hndl->hndl, SCHED_RR, &schedprm);
+
+	return ret;
 }
 
 int orange_thread_exit(void* return_val)
 {
+	pthread_exit(return_val);
 	return 0;
 }
 
 int orange_thread_is_valid(struct orange_thread_handle* hndl)
 {
-	return 0;
+	int ret = -1;
+	if (NULL == hndl) {
+		goto exit;
+	}
+
+	if (hndl->hndl == ORANGE_THREAD_HANDLE_INVLALID) {
+		goto exit;
+	}
+
+	ret = pthread_kill(hndl->hndl, 0);
+
+exit:
+	return ret;
 }
 
 int orange_thread_detach(struct orange_thread_handle* hndl)
 {
-	return 0;
+	int ret = -1;
+
+	if (NULL == hndl) {
+		goto exit;
+	}
+
+	if (ORANGE_THREAD_HANDLE_INVLALID == hndl->hndl) {
+		goto exit;
+	}
+
+	ret = pthread_detach(hndl->hndl);
+
+exit:
+	return ret;
 }
 
 int orange_thread_get_stack_size(void)
 {
-	return 0;
+	pthread_attr_t thread_attr;
+	int			   stack_size = 0;
+
+	int ret = pthread_attr_init(&thread_attr);
+	if (0 != ret) {
+		goto exit;
+	}
+
+	ret = pthread_attr_getstacksize(&thread_attr, (size_t*) &stack_size);
+
+exit:
+	return stack_size;
 }
 
 int orange_thread_set_thread_stack_size(uint32_t stack_size)
 {
-	return 0;
+	pthread_attr_t thread_attr;
+	int			   tmp_stack_size = 0;
+
+	int ret = pthread_attr_init(&thread_attr);
+	if (0 != ret) {
+		goto exit;
+	}
+
+	ret = pthread_attr_setstacksize(&thread_attr, (int) stack_size);
+	if (0 != ret) {
+		goto exit;
+	}
+
+	ret = pthread_attr_getstacksize(&thread_attr, (size_t*) &tmp_stack_size);
+	if (stack_size == tmp_stack_size) {
+		ret = 0;
+	}
+
+exit:
+	return ret;
 }
 
 int orange_thread_get_self_thread_handle(struct orange_thread_handle* selft_thread_handle)
