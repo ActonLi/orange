@@ -378,17 +378,115 @@ int orange_thread_create_ex(struct orange_thread_handle* hndl, orange_thread_ent
 
 int orange_thread_cond_event_init(struct orange_cond_event_handle_tag* cond_event)
 {
-	return 0;
+	int ret = -1;
+
+	pthread_condattr_t  cond_attr;
+	pthread_mutexattr_t mutex_attr;
+
+	if (NULL == cond_event) {
+		goto exit;
+	}
+
+	cond_event->initialized	= -1;
+	cond_event->spuriouswakeup = 0;
+
+	ret = pthread_condattr_init(&cond_attr);
+	if (0 != ret) {
+		goto destroy;
+	}
+
+	ret = pthread_mutexattr_init(&mutex_attr);
+	if (0 != ret) {
+		goto destroy;
+	}
+
+	pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+
+	ret = pthread_mutex_init(&(cond_event->mutex), &mutex_attr);
+	if (0 != ret) {
+		goto destroy;
+	}
+
+	ret = pthread_cond_init(&(cond_event->cond), &cond_attr);
+	if (0 != ret) {
+		goto destroy;
+	}
+
+	cond_event->initialized = 0;
+
+destroy:
+	pthread_condattr_destroy(&cond_attr);
+	pthread_mutexattr_destroy(&mutex_attr);
+
+exit:
+	return ret;
 }
 
 int orange_thread_cond_event_de_init(struct orange_cond_event_handle_tag* cond_event)
 {
-	return 0;
+	int ret = -1;
+
+	if (NULL == cond_event) {
+		goto exit;
+	}
+
+	pthread_mutex_lock(&(cond_event->mutex));
+	if (0 != ret) {
+		goto exit;
+	}
+
+	cond_event->spuriouswakeup = 0;
+	ret						   = pthread_cond_destroy(&(cond_event->cond));
+	if (0 != ret) {
+		orange_log_error("%s:%d cond destroy error.\n", __func__, __LINE__);
+	}
+	cond_event->initialized = 1;
+
+	ret = pthread_mutex_unlock(&(cond_event->mutex));
+	if (0 != ret) {
+		goto exit;
+	}
+
+	ret = pthread_mutex_destroy(&(cond_event->mutex));
+	if (0 != ret) {
+		orange_log_error("%s:%d mutex destroy error.\n", __func__, __LINE__);
+	}
+
+exit:
+	return ret;
 }
 
 int orange_thread_set_cond_event(struct orange_cond_event_handle_tag* cond_event)
 {
-	return 0;
+	int ret = -1;
+
+	if (NULL == cond_event) {
+		goto exit;
+	}
+
+	ret = pthread_mutex_lock(&(cond_event->mutex));
+	if (0 != ret) {
+		goto exit;
+	}
+
+	if (!cond_event->initialized) {
+		goto unlock;
+	}
+
+	ret = pthread_cond_signal(&(cond_event->cond));
+	if (0 == ret) {
+		cond_event->spuriouswakeup = -1;
+	}
+
+unlock:
+	ret = pthread_mutex_unlock(&(cond_event->mutex));
+
+exit:
+	if (0 == ret) {
+		orange_thread_sleep(0);
+	}
+
+	return ret;
 }
 
 int orange_thread_wait_cond_event(struct orange_cond_event_handle_tag* cond_event, uint32_t timeout_ms)
