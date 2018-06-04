@@ -6,7 +6,6 @@
 #include <ctype.h>
 #include <dlfcn.h>
 #include <elf.h>
-#include <endian.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
