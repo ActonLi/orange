@@ -8,7 +8,7 @@ CFLAGS= -O2 -pipe -fPIC -fno-strict-aliasing -fno-common \
 			   -Wundef -g -std=gnu9x -fstack-protector
 
 CFLAGS += -I/usr/local/include
-LDFLAGS += -L /usr/local/lib -lrt -ldl
+LDFLAGS += -L /usr/local/lib -lrt -ldl -lpthread
 
 all: liborange 
 
