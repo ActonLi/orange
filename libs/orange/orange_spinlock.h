@@ -1,6 +1,7 @@
 #ifndef __ORANGE_SPINLOCK_H__
 #define __ORANGE_SPINLOCK_H__
 
+#include "orange.h"
 #include "orange_log.h"
 
 #ifdef _KERNEL
