@@ -48,6 +48,20 @@
 #include <time.h>
 #include <unistd.h>
 
+typedef enum orange_endianess {
+	ORANGE_BIG_ENDIAN	= 0,
+	ORANGE_LITTLE_ENDIAN = 1,
+} orange_endianess_t;
+
+static inline int orange_is_little_endian(void)
+{
+	const union {
+		uint32_t u;
+		uint8_t  c[4];
+	} one = {1}; /* don't use static : performance detrimental  */
+	return one.c[0];
+}
+
 #define ORANGE_TIMEOUT_NONE ((uint32_t) 0)
 #define ORANGE_TIMEOUT_FOREVER ((uint32_t) -1)
 #define ORANGE_TIMEOUT_TIMED ((uint32_t) -2)
