@@ -29,7 +29,7 @@ typedef struct orange_module_entry {
 } orange_module_entry_t;
 
 typedef struct orange_module_session {
-	char			  path[PATH_MAX];
+	char			  path[ORANGE_MODULE_PATH_LEN_MAX];
 	int				  count;
 	orange_spinlock_t lock;
 	TAILQ_HEAD(orange_module_list, orange_module_entry) list;
@@ -156,7 +156,7 @@ static int __orange_module_sysinit_all(char* name, uint64_t value, void* data)
 {
 	int									 ret = 0;
 	struct orange_module_sysinit_params* params;
-	char								 base_string[PATH_MAX];
+	char								 base_string[ORANGE_MODULE_NAME_LEN_MAX];
 
 	/* Name endsWith "object" */
 	if (strlen(name) > strlen("object") && memcmp((name + strlen(name) - strlen("object")), "object", strlen("object")) == 0) {
@@ -165,9 +165,9 @@ static int __orange_module_sysinit_all(char* name, uint64_t value, void* data)
 
 	params = (struct orange_module_sysinit_params*) data;
 	if (params->init) {
-		snprintf(base_string, PATH_MAX, "sys_init_");
+		snprintf(base_string, ORANGE_MODULE_NAME_LEN_MAX, "sys_init_");
 	} else {
-		snprintf(base_string, PATH_MAX, "sys_uninit_");
+		snprintf(base_string, ORANGE_MODULE_NAME_LEN_MAX, "sys_uninit_");
 	}
 
 	if (strlen(name) > strlen(base_string)) {
@@ -347,16 +347,16 @@ static int __orange_module_load_depend(char* name, uint64_t value, void* data)
 	int							 ret = 0;
 	struct orange_module_params* params;
 	// struct orange_module_entry *module_entry;
-	char module_name[PATH_MAX];
-	char base_string[PATH_MAX];
+	char module_name[ORANGE_MODULE_NAME_LEN_MAX];
+	char base_string[ORANGE_MODULE_NAME_LEN_MAX];
 
 	params = (struct orange_module_params*) data;
-	snprintf(base_string, PATH_MAX, "%s_depend_on_", params->module_name);
+	snprintf(base_string, ORANGE_MODULE_NAME_LEN_MAX, "%s_depend_on_", params->module_name);
 
 	if (strlen(name) > strlen(base_string)) {
 		if (strncmp(base_string, name, strlen(base_string)) == 0) {
 
-			memset(module_name, 0, PATH_MAX);
+			memset(module_name, 0, ORANGE_MODULE_NAME_LEN_MAX);
 			memcpy(module_name, name + strlen(base_string), strlen(name) - strlen(base_string));
 
 			DEBUGP("%s: path: %s, base_module_name: %s, module_name: %s\n", __func__, params->module_session->path, params->module_name, module_name);
@@ -467,7 +467,7 @@ int orange_module_load_all(struct orange_module_session* module_session)
 	int  ret = EINVAL;
 	int  fd;
 	char config_filename[PATH_MAX];
-	char module_name[PATH_MAX];
+	char module_name[ORANGE_MODULE_NAME_LEN_MAX];
 
 	if (module_session == NULL) {
 		ret = EINVAL;
@@ -507,8 +507,8 @@ int orange_module_load_all(struct orange_module_session* module_session)
 				break;
 			}
 
-			if ((end > begin) && (end - begin) < PATH_MAX) {
-				memset(module_name, 0, PATH_MAX);
+			if ((end > begin) && (end - begin) < ORANGE_MODULE_PATH_LEN_MAX) {
+				memset(module_name, 0, ORANGE_MODULE_NAME_LEN_MAX);
 				strncpy(module_name, begin, end - begin);
 
 				ret = orange_module_load(module_session, module_name);
@@ -635,7 +635,7 @@ struct orange_module_session* orange_module_open(char* path)
 
 	module_session = orange_zalloc(sizeof(struct orange_module_session));
 	if (module_session != NULL) {
-		strncpy(module_session->path, path, PATH_MAX);
+		strncpy(module_session->path, path, ORANGE_MODULE_PATH_LEN_MAX);
 		TAILQ_INIT(&module_session->list);
 		orange_spinlock_init(&module_session->lock, "module lock");
 	}

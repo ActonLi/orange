@@ -27,6 +27,10 @@
  * splimp() until the first init that doesn't want it is the correct
  * fix.  They are currently present to ensure historical behavior.
  */
+
+#define ORANGE_MODULE_NAME_LEN_MAX 512
+#define ORANGE_MODULE_PATH_LEN_MAX 2048
+
 enum orange_sysinit_sub_id {
 	ORANGE_SI_SUB_DUMMY				   = 0x0000000, /* not executed; for linker*/
 	ORANGE_SI_SUB_DONE				   = 0x0000001, /* processed*/
