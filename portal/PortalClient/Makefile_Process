@@ -1,0 +1,66 @@
+TOOL_PREFIX=/opt/poky/1.6.1/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi/arm-poky-linux-gnueabi-
+
+ifeq ($(findstring arm-poky-linux-gnueabi-,$(TOOL_PREFIX)),arm-poky-linux-gnueabi-)
+TARGET_DIR=./build/imx6/target
+BUILD_DIR_OBJ=./build/imx6/obj
+endif
+
+TARGET=PortalClient
+MOUNT_DIR=/work/Digital/Platform/imx6/mount/shelly/GlobalIP/PortalClient/application
+PROJECT_DIR=../../../project/HGI16
+
+CC=$(TOOL_PREFIX)gcc
+CPP=$(TOOL_PREFIX)g++
+AR=$(TOOL_PREFIX)ar
+LD=$(TOOL_PREFIX)gcc
+STRIP=$(TOOL_PREFIX)strip
+
+WARNING_OPT= -Wcast-qual -Wstrict-prototypes -Winline
+CC_OPTS= -c -Wall $(WARNING_OPT) -fPIC 
+
+INC_DIR=./inc
+
+INCLUDE=-I../../../component/abb_lib/inc/ -I../../../component/abb_lib/inc/osa  -I$(INC_DIR)  -I../../../third_party/inc/curl -I../../../third_party/inc/nopoll
+
+LD_OPTS = -L../../../component/abb_lib/lib/imx6/ -L../../../third_party/lib/imx6/
+LD_OPTS += -losa -llocalsocket -lnetwork -lalgorithm -lcfgfile  -lcurl -luuid -ljson -lnopoll -lcrypto -lssl -ldevicemanager -lsetting_interface
+LD_OPTS += -lpthread -ldl -lm
+SRC_PATH=./src
+
+
+FILES=$(subst ./, , $(foreach dir,$(SRC_PATH),$(wildcard $(dir)/*.c))) 
+OBJS=$(subst .c,.o, $(FILES) )
+vpath %.o $(OBJ_DIR) 
+
+PortalClient:
+	make dir
+	make PortalClient_objs
+	make link
+	mv $(TARGET_DIR)/$(TARGET) $(TARGET_DIR)/$(TARGET)_$(shell git rev-parse HEAD)
+	rm -f $(MOUNT_DIR)/PortalClient*
+	
+	rm -f $(PROJECT_DIR)/PortalClient*
+	cp $(TARGET_DIR)/$(TARGET)_$(shell git rev-parse HEAD) $(MOUNT_DIR)
+	cp $(TARGET_DIR)/$(TARGET)_$(shell git rev-parse HEAD) $(PROJECT_DIR)
+	
+
+PortalClient_objs: $(OBJS)
+
+.c.o:
+	@echo  $(MODULE): Compiling $< to $@ 
+	$(CC) $(CC_OPTS) $(DEFINE) $(INCLUDE) -o$@ $< 2>&1
+	mv $@ $(BUILD_DIR_OBJ)/$(notdir $@)
+	@echo	
+
+link:
+	$(LD) $(LD_OPTS) -o $(TARGET_DIR)/$(TARGET) $(wildcard $(BUILD_DIR_OBJ)/*) 2>&1  
+	
+clean:
+	-rm -rf ./build
+
+dir:
+	rm -rf ./build
+	mkdir -p $(BUILD_DIR_OBJ)
+	mkdir -p $(TARGET_DIR)
+	
+.PHONY: target clean

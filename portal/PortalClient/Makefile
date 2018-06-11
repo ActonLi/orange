@@ -1,0 +1,90 @@
+INC_INSTALL_DIR= ../../../common/lib/inc
+LIB_INSTALL_DIR= ../../../common/lib/lib/$(PLATFORM)
+VERSION = `cat version.txt`
+
+
+ifeq ($(TOOL_PREFIX),)
+ifeq ($(PLATFORM),imx6)
+    TOOL_PREFIX=/opt/poky/1.6.1/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi/arm-poky-linux-gnueabi-
+else 
+	ifeq ($(PLATFORM),cx92755)
+    TOOL_PREFIX=/opt/cx92755/usr/bin/arm-linux-uclibcgnueabi-
+else
+    # default to no PREFIX, which work on cygwin and Mac
+    TOOL_PREFIX=
+endif
+endif
+endif
+
+
+
+CC=$(TOOL_PREFIX)gcc
+CPP=$(TOOL_PREFIX)g++
+AR=$(TOOL_PREFIX)ar
+LD=$(TOOL_PREFIX)gcc
+STRIP=$(TOOL_PREFIX)strip
+
+WARNING_OPT= -Wcast-qual -Wstrict-prototypes -Winline
+CC_OPTS= -c -Wall $(WARNING_OPT) -fPIC 
+#CC_OPTS+=-g -rdynamic -fstack-check
+AR_OPTS= -rcs
+INC_DIR=./inc
+INCLUDE=-I../../../common/lib/inc/ -I../../../common/lib/inc/osa  -I$(INC_DIR)  -I../../../third_party/inc/curl -I../../../third_party/inc/nopoll
+ifeq ($(PLATFORM),cx92755)
+	INCLUDE += -I /opt/cx92755/usr/include
+endif
+
+MODULE=portalclient
+LIB = lib$(MODULE).a
+LIB_SO = lib$(MODULE).so$(VERSION)
+OBJ_DIR=./build/imx6/obj
+LIB_DIR=./build/imx6/target
+INC_API_DIR=./inc
+SRC_PATH=./src
+
+FILES=$(subst ./, , $(foreach dir,$(SRC_PATH),$(wildcard $(dir)/*.c))) 
+OBJS=$(subst .c,.o, $(FILES))
+vpath %.o $(OBJ_DIR) 
+
+.c.o:
+	@echo  $(MODULE): Compiling $< 
+	$(CC) $(CC_OPTS) $(DEFINE) $(INCLUDE) -o$@ $< 2>&1
+	mv $@ $(OBJ_DIR)/$(notdir $@)
+	@echo
+
+lib : depend $(LIB_DIR)/$(LIB) 
+
+$(LIB_DIR)/$(LIB) : $(OBJS)
+	@echo  $(MODULE): Creating archive $(LIB)
+	$(AR) $(AR_OPTS) $(LIB_DIR)/$(LIB) $(OBJ_DIR)/*.o
+	@echo  $(MODULE): Creating libso -- $(LIB_SO)
+	$(LD) $(LD_OPTS) -shared -o$(LIB_DIR)/$(LIB_SO) $(OBJ_DIR)/*.o $(LIBS)
+
+install:
+	@echo install lib into $(LIB_INSTALL_DIR)
+	-mkdir -p $(LIB_INSTALL_DIR)
+	#cp -f $(LIB_DIR)/$(LIB)	$(LIB_INSTALL_DIR)
+	rm -f $(LIB_INSTALL_DIR)/lib$(MODULE).so*
+	cp -f $(LIB_DIR)/$(LIB_SO) $(LIB_INSTALL_DIR)
+	@echo install inc into $(INC_INSTALL_DIR)
+	-mkdir -p $(INC_INSTALL_DIR)
+	cp -f $(INC_API_DIR)/*.h  $(INC_INSTALL_DIR)		
+
+lib_install: lib install
+
+clean:
+	@echo $(MODULE): Deleting temporary files   
+	-rm -f MAKEFILE.DEPEND 	
+	-rm -f $(OBJ_DIR)/*.o
+	-rm -f $(LIB_DIR)/$(LIB)
+	-rm -f $(LIB_DIR)/$(LIB_SO)
+
+depend:
+	@echo $(MODULE): Making Directories, if not already created
+	-mkdir -p $(LIB_DIR)	
+	-mkdir -p $(OBJ_DIR)
+	@echo $(MODULE): Building dependancies
+	$(CC)	$(CC_OPTS) $(DEFINE) $(INCLUDE) $(FILES) -M > MAKEFILE.DEPEND
+
+-include MAKEFILE.DEPEND 
+.PHONY : clean depend lib lib_install
