@@ -25,6 +25,7 @@
 #include <sched.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>

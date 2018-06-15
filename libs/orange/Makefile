@@ -15,7 +15,7 @@ all: liborange
 LIB_OBJS = orange_log.o orange_file.o orange_utils.o \
 		   log/orange_filelog.o log/orange_consolelog.o \
 		   log/orange_syslog.o orange_daemon.o orange_options.o \
-		   orange_module.o orange_elf.o orange_hash.o
+		   orange_module.o orange_elf.o orange_hash.o orange_autoid.o
 
 liborange: $(LIB_OBJS)
 	${CC} ${CFLAGS} ${LIB_OBJS} -shared -o liborange.so ${LDFLAGS}  
