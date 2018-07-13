@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include  
+
+Name: @PACKAGE@
+Description: ELF object file access library
+Version: @VERSION@
+Requires:
+Conflicts:
+Libs: -L${libdir} -lelf
+Cflags: -I${includedir}/libelf -I${includedir}

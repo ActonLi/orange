@@ -1,0 +1,14 @@
+sudo: off
+language: c
+
+addons:
+  apt:
+    sources:
+    - george-edison55-precise-backports
+    packages:
+    - cmake
+    - cmake-data
+
+script:
+  - cmake . -B_Release -DCMAKE_BUILD_TYPE=Release
+  - cmake --build _Release
