@@ -1,0 +1,6 @@
+2018-01-05 David Anderson
+    * dwarf_macro5.c(_dwarf_get_macro_ops_count_internal):
+      A test duplicated the preceding loop condition so
+      the body of the test was dead code. Removed the
+      dead code.
+
