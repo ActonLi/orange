@@ -116,9 +116,25 @@ exit:
 
 int orange_timer_kill(int timer_id)
 {
+	struct orange_timer* timer = NULL;
+
 	if (timer_id < 0 || timer_id > MAX_TIMER_NUM) {
 		return -1;
 	}
+
+	__orange_timer_lock();
+	timer = __orange_timer_find(timer_id);
+	if (NULL == timer) {
+		__orange_timer_unlock();
+		return -1;
+	}
+	RB_REMOVE(orange_timer_tree, &(timer_disc.timer_tree), timer);
+	TAILQ_REMOVE(&(timer_disc.list_head), timer, list);
+	__orange_timer_unlock();
+
+	__orange_timer_destroy(timer);
+
+	return 0;
 }
 
 int orange_timer_set(uint32_t timeout, orange_timer_type_t timer_type, orange_timer_func_t* timeout_func, void* data)
