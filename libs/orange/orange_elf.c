@@ -12,15 +12,12 @@
 #define orange_elf_get_off orange_elf_get_quad
 #define orange_elf_get_size orange_elf_get_quad
 
-#ifdef __linux__
 /* Note header in a PT_NOTE section */
 typedef struct elf_note {
 	Elf32_Word n_namesz; /* Name size */
 	Elf32_Word n_descsz; /* Content size */
 	Elf32_Word n_type;   /* Content type */
 } Elf_Note;
-
-#endif /* __linux__ */
 
 enum elf_member {
 	D_TAG = 1,
