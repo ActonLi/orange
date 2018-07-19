@@ -126,18 +126,6 @@ enum orange_sysinit_elem_order {
 	ORANGE_SI_ORDER_ANY	= 0xfffffff  /* last*/
 };
 
-#ifdef _KERNEL
-#define ORANGE_MOD_LOAD MOD_LOAD
-#define ORANGE_MOD_UNLOAD MOD_UNLOAD
-
-#define orange_module_t module_t
-#define orange_moduledata_t moduledata_t
-
-#define ORANGE_DECLARE_MODULE DECLARE_MODULE
-#define ORANGE_MODULE_DEPEND MODULE_DEPEND
-#define ORANGE_MODULE_VERSION MODULE_VERSION
-#else
-
 /*
  * Module dependency declarartion
  */
@@ -267,7 +255,5 @@ extern struct orange_module_session* orange_module_open(char* path);
 extern void orange_module_close(struct orange_module_session* module_session);
 
 extern int orange_modules_load(char* path);
-
-#endif
 
 #endif /* !__ORANGE_MODULE_H_ */

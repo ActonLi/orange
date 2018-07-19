@@ -63,6 +63,86 @@ static inline int orange_is_little_endian(void)
 	return one.c[0];
 }
 
+#define ORANGE_VERSION_VALUE(major, minor, build) (uint32_t)(((uint32_t)(major) << 16) + ((uint16_t)(minor) << 8) + ((uint16_t)(build)))
+
+#define ORANGE_VERSION_MAJOR(version) (((unsigned char*) &(version))[2])
+#define ORANGE_VERSION_MINOR(version) (((unsigned char*) &(version))[1])
+#define ORANGE_VERSION_BUILD(version) (((unsigned char*) &(version))[0])
+
+#define ORANGE_VERSION_STRING_LEN 16
+#define ORANGE_VERSION_FORMAT "%u.%u.%02u"
+#define ORANGE_VERSION_QUAD(version) ((unsigned char*) &(version))[2], ((unsigned char*) &(version))[1], ((unsigned char*) &(version))[0]
+
+#define ORANGE_VERSION_TYPE_RELEASE 0x03
+#define ORANGE_VERSION_TYPE_BETA 0x02
+#define ORANGE_VERSION_TYPE_ALPHA 0x01
+#define ORANGE_VERSION_TYPE_UNKNOWN 0x00
+
+#define ORANGE_VERSION_TYPE_RELEASE_STRING "RELEASE"
+#define ORANGE_VERSION_TYPE_BETA_STRING "BETA"
+#define ORANGE_VERSION_TYPE_ALPHA_STRING "ALPHA"
+#define ORANGE_VERSION_TYPE_UNKNOWN_STRING "UNKNOWN"
+
+static __inline__ const char* orange_version_type(int type)
+{
+	switch (type) {
+		case ORANGE_VERSION_TYPE_RELEASE:
+			return ORANGE_VERSION_TYPE_RELEASE_STRING;
+
+		case ORANGE_VERSION_TYPE_BETA:
+			return ORANGE_VERSION_TYPE_BETA_STRING;
+
+		case ORANGE_VERSION_TYPE_ALPHA:
+			return ORANGE_VERSION_TYPE_ALPHA_STRING;
+
+		case ORANGE_VERSION_TYPE_UNKNOWN:
+		default:
+			return ORANGE_VERSION_TYPE_UNKNOWN_STRING;
+	}
+	return ORANGE_VERSION_TYPE_UNKNOWN_STRING;
+}
+
+#define ORANGE_VERSION_TYPE(name)                                                                                                                              \
+	extern uint8_t name##_version_major(void);                                                                                                                 \
+	extern uint8_t name##_version_minor(void);                                                                                                                 \
+	extern uint8_t name##_version_build(void);                                                                                                                 \
+	extern char*   name##_version_description(void);                                                                                                           \
+	extern int	 name##_version_build_num(void);                                                                                                             \
+	extern char*   name##_version_build_date(void);
+
+#define ORANGE_VERSION_GENERATE(name, major, minor, build, type)                                                                                               \
+	static int name##_version	  = ORANGE_VERSION_VALUE((major), (minor), (build));                                                                          \
+	static int name##_version_type = (type);                                                                                                                   \
+	char	   name##_description[128];                                                                                                                        \
+	uint8_t	name##_version_major(void)                                                                                                                      \
+	{                                                                                                                                                          \
+		return ORANGE_VERSION_MAJOR(name##_version);                                                                                                           \
+	}                                                                                                                                                          \
+                                                                                                                                                               \
+	uint8_t name##_version_minor(void)                                                                                                                         \
+	{                                                                                                                                                          \
+		return ORANGE_VERSION_MINOR(name##_version);                                                                                                           \
+	}                                                                                                                                                          \
+                                                                                                                                                               \
+	uint8_t name##_version_build(void)                                                                                                                         \
+	{                                                                                                                                                          \
+		return ORANGE_VERSION_BUILD(name##_version);                                                                                                           \
+	}                                                                                                                                                          \
+                                                                                                                                                               \
+	char* name##_version_description(void)                                                                                                                     \
+	{                                                                                                                                                          \
+		return name##_description;                                                                                                                             \
+	}                                                                                                                                                          \
+                                                                                                                                                               \
+	int name##_version_build_num(void)                                                                                                                         \
+	{                                                                                                                                                          \
+		return name##_build_num;                                                                                                                               \
+	}                                                                                                                                                          \
+	char* name##_version_build_date(void)                                                                                                                      \
+	{                                                                                                                                                          \
+		return name##_build_date;                                                                                                                              \
+	}
+
 #define ORANGE_TIMEOUT_NONE ((uint32_t) 0)
 #define ORANGE_TIMEOUT_FOREVER ((uint32_t) -1)
 #define ORANGE_TIMEOUT_TIMED ((uint32_t) -2)

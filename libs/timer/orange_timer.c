@@ -1,8 +1,10 @@
 #include "orange_timer.h"
-#include "../orange/orange.h"
 #include "../orange/orange_queue.h"
 #include "../orange/orange_spinlock.h"
 #include "../orange/orange_tree.h"
+#include "orange_timer_version.h"
+
+ORANGE_VERSION_GENERATE(orange_timer, 1, 1, 1, ORANGE_VERSION_TYPE_ALPHA);
 
 typedef struct orange_timer_cmp {
 	int timer_id;
@@ -163,13 +165,13 @@ exit:
 	return timer_id;
 }
 
-int orange_timer_init(int ms_seconds)
+static int orange_timer_init(void)
 {
 	memset(&timer_disc, 0, sizeof(struct orange_timer_disc));
 
 	timer_disc.num		  = 0;
 	timer_disc.max_num	= MAX_TIMER_NUM;
-	timer_disc.ms_seconds = ms_seconds;
+	timer_disc.ms_seconds = 100;
 
 	TAILQ_INIT(&timer_disc.list_head);
 	orange_spinlock_init(&timer_disc.lock, "timer list lock");
@@ -177,7 +179,7 @@ int orange_timer_init(int ms_seconds)
 	return 0;
 }
 
-void orange_timer_fini(void)
+static void orange_timer_fini(void)
 {
 	struct orange_timer* timer = NULL;
 	struct orange_timer* tmp   = NULL;
@@ -195,3 +197,27 @@ void orange_timer_fini(void)
 
 	return;
 }
+
+static int orange_timer_modevent(orange_module_t mod, int type, void* data)
+{
+	int ret = 0;
+
+	switch (type) {
+		case ORANGE_MOD_LOAD:
+			ret = orange_timer_init();
+			break;
+		case ORANGE_MOD_UNLOAD:
+			orange_timer_fini();
+			break;
+		default:
+			return (EOPNOTSUPP);
+	}
+	return ret;
+}
+
+static orange_moduledata_t orange_timer_mod = {"orange_timer", orange_timer_modevent, 0};
+
+ORANGE_DECLARE_MODULE(orange_timer, orange_timer_mod, ORANGE_SI_SUB_PSEUDO, ORANGE_SI_ORDER_ANY);
+ORANGE_DECLARE_MODULE_EXTENSION(orange_timer);
+
+ORANGE_MODULE_VERSION(orange_timer, 1);
