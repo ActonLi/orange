@@ -143,6 +143,8 @@ int orange_timer_set(uint32_t timeout, orange_timer_type_t timer_type, orange_ti
 {
 	int timer_id = INVALID_TIMER_ID;
 
+	orange_log(ORANGE_LOG_INFO, "%s:%d begin.\n", __func__, __LINE__);
+
 	if (timer_disc.num >= timer_disc.max_num) {
 		goto exit;
 	}
@@ -162,6 +164,7 @@ int orange_timer_set(uint32_t timeout, orange_timer_type_t timer_type, orange_ti
 	timer_id = __orange_timer_set(timeout, timer_type, timeout_func, data);
 
 exit:
+	orange_log(ORANGE_LOG_INFO, "%s:%d end timer_id: %d.\n", __func__, __LINE__, timer_id);
 	return timer_id;
 }
 

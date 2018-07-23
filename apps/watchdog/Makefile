@@ -7,7 +7,7 @@ CFLAGS=-O2 -pipe -fPIC -fno-strict-aliasing -fno-common \
 			   -Wmissing-prototypes -Wpointer-arith -Winline -Wcast-qual \
 			   -Wundef -g -std=gnu9x -fstack-protector
 
-CFLAGS += -I/usr/local/include -I../../libs/orange
+CFLAGS += -I/usr/local/include -I../../libs/timer -I../../libs/orange
 LDFLAGS += -L../../libs/orange/ -lorange -ldl
 
 all: watchdog 
