@@ -4,7 +4,6 @@
 #include "orange_log.h"
 #include "orange_module.h"
 #include "orange_options.h"
-#include "orange_timer.h"
 #include "orange_utils.h"
 
 #define DEFAULT_WATCHDOG_CONFIG "wtd.conf"
@@ -28,12 +27,6 @@ static void __watchdog_parse_options(int argc, char** argv)
 											   FLAG_CALLBACK('h', "help", __watchdog_help)));
 }
 
-static int __orange_timeout_func(int id, void* data, int data_len)
-{
-	orange_log(ORANGE_LOG_INFO, "%s:%d.\n", __func__, __LINE__);
-	return 0;
-}
-
 int main(int argc, char** argv)
 {
 	opt.config_file								 = DEFAULT_WATCHDOG_CONFIG;
@@ -49,11 +42,8 @@ int main(int argc, char** argv)
 	orange_module_load_all(module_session);
 
 	if (opt.daemon) {
-		printf("%s:%d daemon\n", __func__, __LINE__);
 		orange_daemon_create(orange_get_short_proc_name(argv[0]));
 	}
-
-	orange_timer_set(100, ORANGE_TIMER_CONTINUED, __orange_timeout_func, (void*) &opt);
 
 	while (1)
 		;

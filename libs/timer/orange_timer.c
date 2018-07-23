@@ -116,6 +116,19 @@ exit:
 	return timer_id;
 }
 
+static int __orange_timer_init(int count, uint32_t ms_seconds)
+{
+	int ret = -1;
+
+	if (count < 0 || count > MAX_TIMER_NUM) {
+		goto exit;
+	}
+
+	ret = 0;
+exit:
+	return ret;
+}
+
 int orange_timer_kill(int timer_id)
 {
 	struct orange_timer* timer = NULL;
@@ -168,7 +181,17 @@ exit:
 	return timer_id;
 }
 
-static int orange_timer_init(void)
+int orange_timer_init_ex(uint32_t ms_seconds)
+{
+	return __orange_timer_init(MAX_TIMER_NUM, ms_seconds);
+}
+
+int orange_timer_init(void)
+{
+	return orange_timer_init_ex(100);
+}
+
+static int __orange_timer_module_init(void)
 {
 
 	snprintf(orange_timer_description, 127, "Orange Timer Module " ORANGE_VERSION_FORMAT "-%s #%u: %s", ORANGE_VERSION_QUAD(orange_timer_version),
@@ -188,7 +211,7 @@ static int orange_timer_init(void)
 	return 0;
 }
 
-static void orange_timer_fini(void)
+static void __orange_timer_module_fini(void)
 {
 	struct orange_timer* timer = NULL;
 	struct orange_timer* tmp   = NULL;
@@ -213,10 +236,10 @@ static int orange_timer_modevent(orange_module_t mod, int type, void* data)
 
 	switch (type) {
 		case ORANGE_MOD_LOAD:
-			ret = orange_timer_init();
+			ret = __orange_timer_module_init();
 			break;
 		case ORANGE_MOD_UNLOAD:
-			orange_timer_fini();
+			__orange_timer_module_fini();
 			break;
 		default:
 			return (EOPNOTSUPP);
