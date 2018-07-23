@@ -167,6 +167,12 @@ exit:
 
 static int orange_timer_init(void)
 {
+
+	snprintf(orange_timer_description, 127, "Orange Timer Module " ORANGE_VERSION_FORMAT "-%s #%u: %s", ORANGE_VERSION_QUAD(orange_timer_version),
+			 orange_version_type(orange_timer_version_type), orange_timer_build_num, orange_timer_build_date);
+
+	orange_log(ORANGE_LOG_INFO, "%s\n", orange_timer_description);
+
 	memset(&timer_disc, 0, sizeof(struct orange_timer_disc));
 
 	timer_disc.num		  = 0;
@@ -218,6 +224,6 @@ static int orange_timer_modevent(orange_module_t mod, int type, void* data)
 static orange_moduledata_t orange_timer_mod = {"orange_timer", orange_timer_modevent, 0};
 
 ORANGE_DECLARE_MODULE(orange_timer, orange_timer_mod, ORANGE_SI_SUB_PSEUDO, ORANGE_SI_ORDER_ANY);
-ORANGE_DECLARE_MODULE_EXTENSION(orange_timer);
 
 ORANGE_MODULE_VERSION(orange_timer, 1);
+ORANGE_DECLARE_MODULE_EXTENSION(orange_timer);
