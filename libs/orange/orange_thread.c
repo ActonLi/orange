@@ -260,7 +260,7 @@ int orange_thread_create(orange_thread_handle_t* thread, orange_thread_entry_fun
 		pri = 1;
 	}
 
-	return orange_thread_create_ex(thread, thread_func, pri, paramter);
+	return orange_thread_create_ex(thread, thread_func, paramter, pri, 0);
 }
 
 int orange_thread_create_ex(orange_thread_handle_t* thread, orange_thread_entry_func thread_func, void* paramter, int pri, int system_scope)
@@ -316,263 +316,176 @@ exit:
 	return ret;
 }
 
-int orange_CondEventInit(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE)
+int orange_thread_cond_event_init(orange_cond_event_handle_t* handle)
 {
-	INT32 iRet = orange_SOK;
+	int ret = -1;
 
 	pthread_condattr_t  cond_attr;
 	pthread_mutexattr_t mutex_attr;
 
-	if (NULL == porange_COND_EVENT_HANDLE) {
-		orange_ERROR("Invalid parameter...");
-		iRet = ERR_INVALID_PARAM;
-		return iRet;
+	if (NULL == handle) {
+		return ret;
 	}
 
-	porange_COND_EVENT_HANDLE->bInitialized	= FALSE;
-	porange_COND_EVENT_HANDLE->bSpuriouswakeup = TRUE;
+	handle->initialized		= 0;
+	handle->spurious_wakeup = 1;
 
-	iRet = pthread_condattr_init(&cond_attr);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_condattr_init fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__;
+	ret = pthread_condattr_init(&cond_attr);
+	if (0 != ret) {
+		goto exit;
 	}
 
-	iRet = pthread_mutexattr_init(&mutex_attr);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutexattr_init fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__;
+	ret = pthread_mutexattr_init(&mutex_attr);
+	if (0 != ret) {
+		goto exit;
 	}
 
-#ifdef __linux__
-	// ???? recursive ????(??????)
 	pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
-#endif
 
-	iRet = pthread_mutex_init(&(porange_COND_EVENT_HANDLE->stMutex), &mutex_attr);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_init fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__;
+	ret = pthread_mutex_init(&(handle->mutex), &mutex_attr);
+	if (0 != ret) {
+		goto exit;
 	}
 
-	iRet = pthread_cond_init(&(porange_COND_EVENT_HANDLE->stCond), &cond_attr);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_cond_init fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__;
+	ret = pthread_cond_init(&(handle->cond), &cond_attr);
+	if (0 != ret) {
+		goto exit;
 	}
 
-	porange_COND_EVENT_HANDLE->bInitialized = TRUE;
+	handle->initialized = 1;
 
-__EXIT__:
+exit:
 	pthread_condattr_destroy(&cond_attr);
 	pthread_mutexattr_destroy(&mutex_attr);
 
-	if (orange_SOK == iRet) {
-		orange_DBG_MSG("orange_CondEventInit call successfully!");
-	}
-
-	return iRet;
+	return ret;
 }
 
-INT32 orange_CondEventDeInit(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE)
+int orange_thread_cond_event_de_init(orange_cond_event_handle_t* handle)
 {
-	INT32 iRet = orange_SOK;
+	int ret = -1;
 
-	if (NULL == porange_COND_EVENT_HANDLE) {
-		orange_ERROR("Invalid parameter...");
-		iRet = ERR_INVALID_PARAM;
-		goto __EXIT__;
+	if (NULL == handle) {
+		goto exit;
 	}
 
-	iRet = pthread_mutex_lock(&(porange_COND_EVENT_HANDLE->stMutex));
-	orange_DBG_MSGXX("porange_COND_EVENT_HANDLE->stMutex(%d), (%d)", *(unsigned int*) &(porange_COND_EVENT_HANDLE->stMutex),
-					 (int) &porange_COND_EVENT_HANDLE->stMutex);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_lock fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-
-		goto __EXIT__;
+	ret = pthread_mutex_lock(&(handle->mutex));
+	if (0 != ret) {
+		goto exit;
 	}
 
-	porange_COND_EVENT_HANDLE->bSpuriouswakeup = TRUE;
-	iRet									   = pthread_cond_destroy(&(porange_COND_EVENT_HANDLE->stCond));
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_cond_destroy fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
+	handle->spurious_wakeup = 1;
+	ret						= pthread_cond_destroy(&(handle->cond));
+	if (0 != ret) {
+		goto exit;
 	}
-	porange_COND_EVENT_HANDLE->bInitialized = FALSE;
+	handle->initialized = 0;
 
-	iRet = pthread_mutex_unlock(&(porange_COND_EVENT_HANDLE->stMutex));
-	orange_DBG_MSGXX("porange_COND_EVENT_HANDLE->stMutex(%d), (%d)", *(unsigned int*) &(porange_COND_EVENT_HANDLE->stMutex),
-					 (int) &porange_COND_EVENT_HANDLE->stMutex);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_unlock fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-
-		goto __EXIT__;
+	ret = pthread_mutex_unlock(&(handle->mutex));
+	if (0 != ret) {
+		goto exit;
 	}
 
-	iRet = pthread_mutex_destroy(&(porange_COND_EVENT_HANDLE->stMutex));
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_destroy fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-	}
+	ret = pthread_mutex_destroy(&(handle->mutex));
 
-__EXIT__:
-	return iRet;
+exit:
+	return ret;
 }
 
-INT32 orange_SetCondEvent(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE)
+int orange_thread_set_cond_event(orange_cond_event_handle_t* handle)
 {
-	INT32 iRet = orange_SOK;
+	int ret = -1;
 
-	if (NULL == porange_COND_EVENT_HANDLE) {
-		orange_ERROR("Invalid parameter...");
-		iRet = ERR_INVALID_PARAM;
-		goto __EXIT__;
-	}
-	iRet = pthread_mutex_lock(&(porange_COND_EVENT_HANDLE->stMutex));
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_lock fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-
-		goto __EXIT__;
+	if (NULL == handle) {
+		goto exit;
 	}
 
-	if (!porange_COND_EVENT_HANDLE->bInitialized) {
-		orange_ERROR("porange_COND_EVENT_HANDLE->stCond is DESTROYED");
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__1__;
+	ret = pthread_mutex_lock(&(handle->mutex));
+	if (0 != ret) {
+		goto exit;
 	}
 
-	iRet = pthread_cond_signal(&(porange_COND_EVENT_HANDLE->stCond));
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_cond_signal fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-	} else {
-		porange_COND_EVENT_HANDLE->bSpuriouswakeup = FALSE; // ?ڴ˱???Ϊ ????????λ
+	if (!handle->initialized) {
+		goto unlock;
 	}
 
-__EXIT__1__:
-
-	iRet = pthread_mutex_unlock(&(porange_COND_EVENT_HANDLE->stMutex));
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_unlock fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
+	ret = pthread_cond_signal(&(handle->cond));
+	if (0 == ret) {
+		handle->spurious_wakeup = 0;
 	}
 
-__EXIT__:
-	if (orange_SOK == iRet) {
-		orange_DBG_MSG("orange_SetCondEvent call successfully!");
-		orange_Sleep(0); //?ڴ˽����?ǰ?????̵߳?CPUʱ??Ƭ?ó?
+unlock:
+	ret = pthread_mutex_unlock(&(handle->mutex));
+
+exit:
+	if (0 == ret) {
+		orange_Sleep(0);
 	}
 
-	orange_DBG_MSGXX("aaa");
-	return iRet;
+	return ret;
 }
 
-INT32 orange_WaitCondEvent(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE, INT32 iTimeOutMilliSec)
+int orange_thread_wait_cond_event(orange_cond_event_handle_t* handle, int ms)
 {
-	INT32			iRet	= orange_SOK;
-	INT32			iResult = orange_SOK;
+	int				ret = -1;
 	struct timespec waittime;
 	TIME_VAL		stTimeVal = {0};
-	uint32_t		uTemp;
+	uint32_t		tmp;
 
-	if ((NULL == porange_COND_EVENT_HANDLE)) {
-		orange_ERROR("Handle Invalid !");
-		iRet = ERR_INVALID_PARAM;
-
-		return iRet;
+	if ((NULL == handle)) {
+		return ret;
 	}
 
-	if (iTimeOutMilliSec < (INT32) orange_TIMEOUT_FOREVER) {
-		orange_ERROR("Invalid time out value!");
-		iRet = ERR_INVALID_PARAM;
-
-		return iRet;
+	if (ms < (int) ORANGE_TIMEOUT_FOREVER) {
+		return ret;
 	}
 
-	iRet = pthread_mutex_lock(&(porange_COND_EVENT_HANDLE->stMutex));
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_lock fail... error=%d", iRet);
-		iResult = ERR_SYS_API_CALLFAIL;
-
-		goto __EXIT__;
+	ret = pthread_mutex_lock(&(handle->mutex));
+	if (0 != ret) {
+		goto exit;
 	}
 
-	switch (iTimeOutMilliSec) {
-		case orange_TIMEOUT_FOREVER: //?��õȴ?
-		{
-			while (1) //! porange_COND_EVENT_HANDLE->bSpuriouswakeup)
-			{		  // ???? Spurious wakeup
-				iRet = pthread_cond_wait(&(porange_COND_EVENT_HANDLE->stCond), &(porange_COND_EVENT_HANDLE->stMutex));
-
-				if (orange_SOK != iRet) {
-					orange_ERROR("Call System API pthread_cond_wait return val=%d", iRet);
-					iResult = ERR_SYS_API_CALLFAIL;
-					goto __EXIT__;
+	switch (ms) {
+		case ORANGE_TIMEOUT_FOREVER: {
+			while (1) {
+				ret = pthread_cond_wait(&(handle->cond), &(handle->mutex));
+				if (0 != ret) {
+					goto exit;
 				} else {
-					if (FALSE == porange_COND_EVENT_HANDLE->bSpuriouswakeup) { // ?????Ƿ?Ϊ ?ٻ???
-						iResult = orange_SOK;
+					if (!handle->spurious_wakeup) {
 						break;
-					} else { //?ٻ???
+					} else {
 						continue;
 					}
 				}
 			}
-
-			if (orange_SOK != iRet) {
-				orange_ERROR("pthread_cond_wait return val=%d", iRet);
-				iResult = ERR_SYS_API_CALLFAIL;
-			} else {
-				iResult = orange_SOK;
-			}
 		} break;
 
-		case orange_TIMEOUT_NONE: // 0 ?ȴ?
-		{
-			orange_DBG_MSG("orange_WaitCondEvent wait 0 ms...");
+		case ORANGE_TIMEOUT_NONE: {
 		} break;
 
-		default: //??????ʱֵ
-		{
-			if (!orange_TimeGetCurVal(&stTimeVal)) { //??ȡ??ǰʱ??value
-				iResult = ERR_SYS_API_CALLFAIL;
-				orange_ERROR("Unexpect error...");
+		default: {
+			if (!orange_time_get_cur_val(&stTimeVal)) {
 				break;
 			}
 
-			uTemp			 = stTimeVal.uMilliSec + (iTimeOutMilliSec % 1000);			 // ms?????ۼ?ֵ
-			waittime.tv_sec  = stTimeVal.uSecs + iTimeOutMilliSec / 1000 + uTemp / 1000; //???ǵ?ms?????ۼ?????
-			waittime.tv_nsec = (uTemp % 1000) * 1000000 + stTimeVal.uMicroSec * 1000;	//ʣ??ms????ת??Ϊ ns
+			tmp				 = timeval.ms + (ms % 1000);
+			waittime.tv_sec  = timeval.s + ms / 1000 + tmp / 1000;
+			waittime.tv_nsec = (tmp % 1000) * 1000000 + timeval.ms * 1000;
 
-			orange_DBG_MSG("timeout is %u, wait time=%u.%u", iTimeOutMilliSec, (uint32_t) waittime.tv_sec, (uint32_t) waittime.tv_nsec);
-
-			while (1) // porange_COND_EVENT_HANDLE->bSpuriouswakeup)
-			{		  // ???? Spurious wakeup
-				iRet = pthread_cond_timedwait(&(porange_COND_EVENT_HANDLE->stCond), &(porange_COND_EVENT_HANDLE->stMutex), &waittime);
-				if (ETIMEDOUT == iRet) { //??ʱ
-					iResult = ERR_COND_EVENT_WAIT_TIMEOUT;
+			while (1) {
+				ret = pthread_cond_timedwait(&(handle->cond), &(handle->mutex), &waittime);
+				if (ETIMEDOUT == ret) {
 					break;
 				} else {
-					if (orange_SOK == iRet) //?ڳ?ʱʱ???ڵõ? singal
-					{
-						if (FALSE == porange_COND_EVENT_HANDLE->bSpuriouswakeup) { // ?????Ƿ?Ϊ ?ٻ???
-							iResult = orange_SOK;
+					if (0 == ret) {
+						if (!handle->spurious_wakeup) {
 							break;
-						} else { //?ٻ???
+						} else {
 							continue;
 						}
-					} else { //????????
-						orange_ERROR("call pthread_cond_timedwait fail... error=%d", iRet);
-						iResult = ERR_SYS_API_CALLFAIL;
-
-						goto __EXIT__;
+					} else {
+						goto exit;
 					}
 				}
 			}
@@ -580,48 +493,30 @@ INT32 orange_WaitCondEvent(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE, 
 		} break;
 	}
 
-	porange_COND_EVENT_HANDLE->bSpuriouswakeup = TRUE; //??Ҫ???ñ?־??λ
+	handle->spurious_wakeup = 1;
 
-__EXIT__:
-	iRet = pthread_mutex_unlock(&(porange_COND_EVENT_HANDLE->stMutex));
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_unlock fail... error=%d", iRet);
-		iResult = ERR_SYS_API_CALLFAIL;
-	}
-
-	if (ERR_COND_EVENT_WAIT_TIMEOUT == iResult) { //??ʱҪ?ص㷵?ظ???????
-		return iResult;
-	}
-
-	return iResult;
+exit:
+	pthread_mutex_unlock(&(handle->mutex));
+	return ret;
 }
 
-BOOL orange_IsCondEventTrig(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE)
+int orange_thread_is_cond_event_trig(orange_cond_event_handle_t* handle)
 {
-	BOOL  bRet = FALSE;
-	INT32 iRet = orange_SOK;
+	int ret = -1;
+	int sw  = 0;
 
-	if (NULL == porange_COND_EVENT_HANDLE) {
-		orange_ERROR("Invalid parameter...");
-		goto __EXIT__;
+	if (NULL == handle) {
+		goto exit;
 	}
 
-	iRet = pthread_mutex_lock(&(porange_COND_EVENT_HANDLE->stMutex));
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_lock fail... error=%d", iRet);
-		bRet = FALSE;
-
-		goto __EXIT__;
+	ret = pthread_mutex_lock(&(handle->mutex));
+	if (0 != ret) {
+		goto exit;
 	}
 
-	//???? ?Ƿ?Ϊ?ٻ???
-	bRet = !(porange_COND_EVENT_HANDLE->bSpuriouswakeup);
+	sw = !(handle->spurious_wakeup);
 
-	iRet = pthread_mutex_unlock(&(porange_COND_EVENT_HANDLE->stMutex));
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_mutex_unlock fail... error=%d", iRet);
-	}
-
-__EXIT__:
-	return bRet;
+	pthread_mutex_unlock(&(handle->mutex));
+exit:
+	return sw;
 }
