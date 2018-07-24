@@ -26,8 +26,6 @@ typedef struct orange_cond_event_handle {
 	uint8_t			spurious_wakeup;
 } orange_cond_event_handle_t;
 
-extern void orange_thread_sleep(uint32_t sleep_ms);
-
 extern int orange_thread_delete(orange_thread_handle_t* hndl);
 
 extern int orange_thread_join(orange_thread_handle_t* hndl);

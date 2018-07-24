@@ -429,8 +429,8 @@ int orange_thread_wait_cond_event(orange_cond_event_handle_t* handle, int ms)
 {
 	int				ret = -1;
 	struct timespec waittime;
-	TIME_VAL		stTimeVal = {0};
 	uint32_t		tmp;
+	struct timeval  time_val;
 
 	if ((NULL == handle)) {
 		return ret;
@@ -465,13 +465,10 @@ int orange_thread_wait_cond_event(orange_cond_event_handle_t* handle, int ms)
 		} break;
 
 		default: {
-			if (!orange_time_get_cur_val(&stTimeVal)) {
-				break;
-			}
-
-			tmp				 = timeval.ms + (ms % 1000);
-			waittime.tv_sec  = timeval.s + ms / 1000 + tmp / 1000;
-			waittime.tv_nsec = (tmp % 1000) * 1000000 + timeval.ms * 1000;
+			gettimeofday(&time_val, NULL);
+			tmp				 = (tv_sec.tv_usec / 1000) + (ms % 1000);
+			waittime.tv_sec  = tv_sec.tv_sec + ms / 1000 + tmp / 1000;
+			waittime.tv_nsec = (tmp % 1000) * 1000000 + (tv_sec.tv_usec % 1000) * 1000;
 
 			while (1) {
 				ret = pthread_cond_timedwait(&(handle->cond), &(handle->mutex), &waittime);
