@@ -1,4 +1,5 @@
 #include "orange_thread.h"
+#include "orange_log.h"
 
 void orange_thread_sleep(uint32_t ms)
 {
@@ -25,11 +26,6 @@ void orange_thread_sleep(uint32_t ms)
 static int __orange_thread_create(pthread_t* thread, pthread_attr_t* attr, orange_thread_entry_func thread_func, void* arg)
 {
 	return pthread_create(thread, attr, thread_func, arg);
-}
-
-static int __orange_thread_join(pthread_t thread, void** thread_return)
-{
-	return pthread_join(thread, thread_return);
 }
 
 int orange_thread_join(orange_thread_handle_t* hndl)
@@ -72,6 +68,7 @@ int orange_thread_delete(orange_thread_handle_t* hndl)
 
 	ret |= orange_thread_join(hndl);
 
+exit:
 	return ret;
 }
 
@@ -134,8 +131,8 @@ int orange_thread_set_pri(orange_thread_handle_t* thread, int new_pri)
 		goto exit;
 	}
 
-	new_pri = (new_pri < 0 /*ORANGE_THR_PRI_MIN*/) ? 0 /*ORANGE_THR_PRI_MIN*/ : pri;
-	new_pri = (new_pri > ORANGE_THR_PRI_RR_MAX) ? ORANGE_THR_PRI_RR_MAX : pri;
+	new_pri = (new_pri < 0 /*ORANGE_THR_PRI_MIN*/) ? 0 /*ORANGE_THR_PRI_MIN*/ : new_pri;
+	new_pri = (new_pri > ORANGE_THR_PRI_RR_MAX) ? ORANGE_THR_PRI_RR_MAX : new_pri;
 
 	memset(&sched_param, 0, sizeof(struct sched_param));
 	ret = pthread_getschedparam(thread->hndl, &policy, &sched_param);
@@ -170,7 +167,7 @@ int orange_thread_get_pri(orange_thread_handle_t* thread)
 	}
 
 exit:
-	return iRet;
+	return ret;
 }
 
 int orange_thread_get_stack_size(void)
@@ -179,7 +176,7 @@ int orange_thread_get_stack_size(void)
 	int			   ret  = -1;
 	int			   size = 0;
 
-	int ret = pthread_attr_init(&thread_attr);
+	ret = pthread_attr_init(&thread_attr);
 	if (0 != ret) {
 		ret = -1;
 		goto exit;
@@ -201,7 +198,7 @@ int orange_thread_set_stack_size(uint32_t size)
 	pthread_attr_t thread_attr;
 	int			   ret = 0;
 
-	int ret = pthread_attr_init(&thread_attr);
+	ret = pthread_attr_init(&thread_attr);
 	if (0 != ret) {
 		goto exit;
 	}
@@ -243,6 +240,7 @@ int orange_thread_compare(orange_thread_handle_t* a, orange_thread_handle_t* b)
 
 	ret = pthread_equal(a->hndl, tmp.hndl);
 
+exit:
 	return ret;
 }
 
@@ -285,10 +283,10 @@ int orange_thread_create_ex(orange_thread_handle_t* thread, orange_thread_entry_
 		goto exit;
 	}
 
-	pri = MAX(pri, orange_THR_PRI_RR_MIN);
-	pri = MIN(pri, orange_THR_PRI_RR_MAX);
+	pri = max(pri, ORANGE_THR_PRI_RR_MIN);
+	pri = min(pri, ORANGE_THR_PRI_RR_MAX);
 
-	memset(param, 0, sizeof(struct sched_param));
+	memset(&param, 0, sizeof(struct sched_param));
 	ret |= pthread_attr_getschedparam(&attr, &param);
 
 	param.sched_priority = pri;
@@ -392,7 +390,7 @@ exit:
 	return ret;
 }
 
-int orange_thread_set_cond_event(orange_cond_event_handle_t* handle)
+int orange_thread_cond_event_set(orange_cond_event_handle_t* handle)
 {
 	int ret = -1;
 
@@ -419,13 +417,13 @@ unlock:
 
 exit:
 	if (0 == ret) {
-		orange_Sleep(0);
+		orange_thread_sleep(0);
 	}
 
 	return ret;
 }
 
-int orange_thread_wait_cond_event(orange_cond_event_handle_t* handle, int ms)
+int orange_thread_cond_event_wait(orange_cond_event_handle_t* handle, int ms)
 {
 	int				ret = -1;
 	struct timespec waittime;
@@ -466,9 +464,9 @@ int orange_thread_wait_cond_event(orange_cond_event_handle_t* handle, int ms)
 
 		default: {
 			gettimeofday(&time_val, NULL);
-			tmp				 = (tv_sec.tv_usec / 1000) + (ms % 1000);
-			waittime.tv_sec  = tv_sec.tv_sec + ms / 1000 + tmp / 1000;
-			waittime.tv_nsec = (tmp % 1000) * 1000000 + (tv_sec.tv_usec % 1000) * 1000;
+			tmp				 = (time_val.tv_usec / 1000) + (ms % 1000);
+			waittime.tv_sec  = time_val.tv_sec + ms / 1000 + tmp / 1000;
+			waittime.tv_nsec = (tmp % 1000) * 1000000 + (time_val.tv_usec % 1000) * 1000;
 
 			while (1) {
 				ret = pthread_cond_timedwait(&(handle->cond), &(handle->mutex), &waittime);

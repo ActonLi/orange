@@ -17,7 +17,9 @@
 
 typedef void* (*orange_thread_entry_func)(void*);
 
-typedef pthread_t orange_thread_handle_t;
+typedef struct orange_thread_handle {
+	pthread_t hndl;
+} orange_thread_handle_t;
 
 typedef struct orange_cond_event_handle {
 	pthread_cond_t  cond;
@@ -48,11 +50,13 @@ extern int orange_thread_set_pri(orange_thread_handle_t* hndl, int new_pri);
 
 extern int orange_thread_get_pri(orange_thread_handle_t* hndl);
 
+extern void orange_thread_change_self_pri(uint32_t pri);
+
 extern int orange_thread_compare(orange_thread_handle_t* thread_1, orange_thread_handle_t* thread_2);
 
 extern int orange_thread_create(orange_thread_handle_t* hndl, orange_thread_entry_func thread_func, void* paramter);
 
-extern int orange_thread_create_ex(orange_thread_handle_t* hndl, orange_thread_entry_func thread_func, void* paramter, int pri, uint8_t system_scope);
+extern int orange_thread_create_ex(orange_thread_handle_t* hndl, orange_thread_entry_func thread_func, void* paramter, int pri, int system_scope);
 
 extern int orange_thread_cond_event_init(orange_cond_event_handle_t* handle);
 
