@@ -28,48 +28,48 @@ typedef struct orange_cond_event_handle {
 
 extern void orange_thread_sleep(uint32_t sleep_ms);
 
-extern int orange_thread_create(orange_thread_handle_t* hndl, orange_thread_entry_func entryFunc, int pri, void* prm);
+extern int orange_thread_create_with_pri(orange_thread_handle_t* hndl, orange_thread_entry_func thread_func, int pri, void* prm);
 
-extern int orange_thread_create_ex(orange_thread_handle_t* hndl, orange_thread_entry_func entryFunc, int pri, void* prm, char* pFunc, int line);
+extern int orange_thread_create_ex1(orange_thread_handle_t* hndl, orange_thread_entry_func thread_func, int pri, void* parameter, char* func, int line);
 
 extern int orange_thread_delete(orange_thread_handle_t* hndl);
 
 extern int orange_thread_join(orange_thread_handle_t* hndl);
 
-extern int orange_thread_join_ex(orange_thread_handle_t* hndl, char* pFunc, int line);
+extern int orange_thread_join_ex(orange_thread_handle_t* hndl, char* p_func, int line);
 
 extern int orange_thread_change_pri(orange_thread_handle_t* hndl, uint32_t pri);
 
 extern int orange_thread_exit(void* return_value);
 
-extern uint8_t orange_ThrIsValid(orange_thread_handle_t* hndl);
+extern uint8_t orange_thread_is_valied(orange_thread_handle_t* hndl);
 
-extern int orange_ThrDetach(orange_thread_handle_t* hndl);
+extern int orange_thread_detach(orange_thread_handle_t* hndl);
 
-extern int orange_GetStackSize(void);
+extern int orange_thread_get_stack_size(void);
 
-extern uint8_t orange_SetThrStackSize(uint32_t uStackSize);
+extern uint8_t orange_thread_set_stack_size(uint32_t size);
 
-extern uint8_t orange_GetSelfThrHandle(orange_thread_handle_t* pSelfThrHndl);
+extern uint8_t orange_thread_get_self_handle(orange_thread_handle_t* hndl);
 
-extern uint8_t orange_SetThrPri(orange_thread_handle_t* pThr, int iNewPri);
+extern uint8_t orange_thread_set_pri(orange_thread_handle_t* hndl, int new_pri);
 
-extern int orange_GetThrPri(orange_thread_handle_t* pThr);
+extern int orange_thread_get_pri(orange_thread_handle_t* hndl);
 
-extern uint8_t orange_ThrCompare(orange_thread_handle_t* pThr1, orange_thread_handle_t* pThr2);
+extern uint8_t orange_thread_compare(orange_thread_handle_t* thread_1, orange_thread_handle_t* thread_2);
 
-extern int orange_ThreadCreate(orange_thread_handle_t* hndl, orange_thread_entry_func ThreadFunc, void* pParamter);
+extern int orange_thread_create(orange_thread_handle_t* hndl, orange_thread_entry_func thread_func, void* paramter);
 
-extern int orange_ThreadCreateEx(orange_thread_handle_t* hndl, orange_thread_entry_func ThreadFunc, void* pParamter, int i32Pri, uint8_t bSystemScope);
+extern int orange_thread_create_ex(orange_thread_handle_t* hndl, orange_thread_entry_func thread_func, void* paramter, int pri, uint8_t system_scope);
 
-extern int orange_CondEventInit(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE);
+extern int orange_thread_cond_event_init(orange_cond_event_handle_t* handle);
 
-extern int orange_CondEventDeInit(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE);
+extern int orange_thread_cond_event_de_init(orange_cond_event_handle_t* handle);
 
-extern int orange_SetCondEvent(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE);
+extern int orange_thread_cond_event_set(orange_cond_event_handle_t* handle);
 
-extern int orange_WaitCondEvent(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE, int iTimeOutMilliSec);
+extern int orange_thread_cond_event_wait(orange_cond_event_handle_t* handle, int ms);
 
-extern uint8_t orange_IsCondEventTrig(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE);
+extern uint8_t orange_thread_is_cond_event_trig(orange_cond_event_handle_t* handle);
 
-extern void orange_Sleep(uint32_t u32SleepMs);
+extern void orange_thread_sleep(uint32_t ms);
