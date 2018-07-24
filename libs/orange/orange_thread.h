@@ -42,8 +42,6 @@ extern int orange_thread_change_pri(orange_thread_handle_t* hndl, uint32_t pri);
 
 extern int orange_thread_exit(void* return_value);
 
-extern uint8_t orange_thread_is_valied(orange_thread_handle_t* hndl);
-
 extern int orange_thread_detach(orange_thread_handle_t* hndl);
 
 extern int orange_thread_get_stack_size(void);
