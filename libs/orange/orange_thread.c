@@ -32,40 +32,6 @@ static int __orange_thread_join(pthread_t thread, void** thread_return)
 	return pthread_join(thread, thread_return);
 }
 
-int orange_thread_create(orange_thread_handle_t* hndl, orange_thread_entry_func thread_func, int pri, void* prm)
-{
-	int				   ret = -1;
-	pthread_attr_t	 thread_attr;
-	struct sched_param schedprm;
-
-	ret = pthread_attr_init(&thread_attr);
-	if (0 != ret) {
-		goto exit;
-	}
-
-	ret |= pthread_attr_setinheritsched(&thread_attr, PTHREAD_EXPLICIT_SCHED);
-	ret |= pthread_attr_setschedpolicy(&thread_attr, SCHED_RR);
-
-	if (pri > (uint32_t) ORANGE_THR_PRI_RR_MAX) {
-		pri = ORANGE_THR_PRI_RR_MAX;
-	} else if (pri < (uint32_t) ORANGE_THR_PRI_RR_MIN) {
-		pri = ORANGE_THR_PRI_RR_MIN;
-	}
-
-	schedprm.sched_priority = pri;
-	ret |= pthread_attr_setschedparam(&thread_attr, &schedprm);
-
-	if (0 != ret) {
-		pthread_attr_destroy(&thread_attr);
-		goto exit;
-	}
-
-	ret |= pthread_create(&hndl->hndl, &thread_attr, thread_func, prm);
-
-exit:
-	return ret;
-}
-
 int orange_thread_join(orange_thread_handle_t* hndl)
 {
 	int   ret = -1;
@@ -264,123 +230,93 @@ exit:
 	return ret;
 }
 
-BOOL orange_ThrCompare(orange_thread_handle_t* pThr1, orange_thread_handle_t* pThr2)
+int orange_thread_compare(orange_thread_handle_t* a, orange_thread_handle_t* b)
 {
-	orange_thread_handle_t hThreadTemp;
-	int					   iRet;
+	orange_thread_handle_t tmp;
+	int					   ret = -1;
 
-	if ((NULL == pThr1)) {
-		orange_ERROR("Invalid paremeter 1");
-		return FALSE;
+	if ((NULL == a)) {
+		goto exit;
 	}
 
-	hThreadTemp.hndl = (NULL == pThr2) ? pthread_self() : pThr2->hndl;
+	tmp.hndl = (NULL == b) ? pthread_self() : b->hndl;
 
-	iRet = pthread_equal(pThr1->hndl, hThreadTemp.hndl);
+	ret = pthread_equal(a->hndl, tmp.hndl);
 
-	return (0 != iRet);
+	return ret;
 }
 
-INT32 orange_ThreadCreate(orange_thread_handle_t* pThrHandle, orange_thread_entry_func ThreadFunc, void* pParamter)
+int orange_thread_create(orange_thread_handle_t* thread, orange_thread_entry_func thread_func, void* paramter)
 {
-	INT32				   iPri = 0;
-	orange_thread_handle_t hThr;
+	int					   pri = 0;
+	orange_thread_handle_t tmp;
 
-	if (orange_GetSelfThrHandle(&hThr)) {
-		iPri = orange_GetThrPri(&hThr); //?뵱ǰ?̵߳????ȼ?ͬ
-		if (ERR_FAIL == iPri) {
-			iPri = 1; //ʹ?? 1 ???ȼ?(??)
+	if (orange_thread_get_self_handle(&tmp)) {
+		pri = orange_thread_get_pri(&tmp);
+		if (-1 == pri) {
+			pri = 1;
 		}
 	} else {
-		iPri = 1; //ʹ?? 1 ???ȼ?(??)
+		pri = 1;
 	}
 
-	return orange_ThreadCreateEx(pThrHandle, ThreadFunc, pParamter, iPri, FALSE);
+	return orange_thread_create_ex(thread, thread_func, pri, paramter);
 }
 
-INT32 orange_ThreadCreateEx(orange_thread_handle_t* pThrHandle, orange_thread_entry_func ThreadFunc, void* pParamter, INT32 i32Pri, BOOL bSystemScope)
+int orange_thread_create_ex(orange_thread_handle_t* thread, orange_thread_entry_func thread_func, void* paramter, int pri, int system_scope)
 {
-	INT32 iRet = orange_SOK;
+	int ret = -1;
 
 	pthread_attr_t	 attr;
-	struct sched_param param = {0};
+	struct sched_param param;
 
-	if ((NULL == pThrHandle) || (NULL == ThreadFunc)) {
-		orange_ERROR("Invalid parameter...");
-		iRet = ERR_INVALID_PARAM;
-		return iRet;
+	if ((NULL == thread) || (NULL == thread_func)) {
+		orange_log_error("%s;%d parameter error.\n", __func__, __LINE__);
+		return -1;
 	}
 
-	iRet = pthread_attr_init(&attr);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_attr_init fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__;
-	}
-#ifdef __linux__ // cygwin only support SCHED_FIFO
-	iRet |= pthread_attr_setschedpolicy(&attr, SCHED_RR);
-#else
-	iRet |= pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
-#endif
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_attr_setschedpolicy fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__;
+	ret = pthread_attr_init(&attr);
+	if (0 != ret) {
+		goto exit;
 	}
 
-	//???????ȼ?
-	i32Pri = orange_Max(i32Pri, orange_THR_PRI_RR_MIN);
-	i32Pri = orange_Min(i32Pri, orange_THR_PRI_RR_MAX);
-
-	iRet |= pthread_attr_getschedparam(&attr, &param);
-	orange_DBG_MSG("the default pri=%d, Target pri=%d", param.sched_priority, i32Pri);
-	param.sched_priority = i32Pri;
-	iRet |= pthread_attr_setschedparam(&attr, &param);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_attr_setschedparam fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__;
+	ret |= pthread_attr_setschedpolicy(&attr, SCHED_RR);
+	if (0 != ret) {
+		goto exit;
 	}
 
-	iRet |= pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_attr_setdetachstate fail... error=%d", iRet);
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__;
+	pri = MAX(pri, orange_THR_PRI_RR_MIN);
+	pri = MIN(pri, orange_THR_PRI_RR_MAX);
+
+	memset(param, 0, sizeof(struct sched_param));
+	ret |= pthread_attr_getschedparam(&attr, &param);
+
+	param.sched_priority = pri;
+	ret |= pthread_attr_setschedparam(&attr, &param);
+	if (0 != ret) {
+		goto exit;
 	}
 
-	if (bSystemScope) {
-		//?????߳̾??�����
-		iRet |= pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-		if (orange_SOK != iRet) {
-			orange_ERROR("call pthread_attr_setdetachstate fail... error=%d", iRet);
-			iRet = ERR_SYS_API_CALLFAIL;
-			goto __EXIT__;
+	ret |= pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	if (0 != ret) {
+		goto exit;
+	}
+
+	if (system_scope) {
+		ret |= pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+		if (0 != ret) {
+			goto exit;
 		}
 	}
 
-	//????
-	iRet = __orange_thread_create(&(pThrHandle->hndl), &attr, (void*) ThreadFunc, pParamter);
-	if (orange_SOK != iRet) {
-		orange_ERROR("call pthread_create fail... error=%d", iRet);
-		switch (iRet) {
-			case EAGAIN:
-				break;
-			case EINVAL:
-				break;
-		}
-		iRet = ERR_SYS_API_CALLFAIL;
-		goto __EXIT__;
-	}
+	ret = __orange_thread_create(&(thread->hndl), &attr, (void*) thread_func, paramter);
 
-__EXIT__:
+exit:
 	pthread_attr_destroy(&attr);
-
-	return iRet;
+	return ret;
 }
 
-/*----------------????Ϊ cond??????��?ķ?װ-------------------------------*/
-INT32 orange_CondEventInit(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE)
+int orange_CondEventInit(orange_COND_EVENT_HANDLE* porange_COND_EVENT_HANDLE)
 {
 	INT32 iRet = orange_SOK;
 
