@@ -1,6 +1,7 @@
 #include "orange_timer.h"
 #include "../orange/orange_queue.h"
 #include "../orange/orange_spinlock.h"
+#include "../orange/orange_thread.h"
 #include "../orange/orange_tree.h"
 #include "orange_timer_version.h"
 
@@ -16,6 +17,7 @@ typedef struct orange_timer {
 	uint32_t			 elapse;
 	orange_timer_func_t* timeout_func;
 	void*				 data;
+	int					 data_size;
 	uint32_t			 index;
 	uint32_t			 times;
 
@@ -37,7 +39,9 @@ static inline int __orange_timer_cmp(struct orange_timer* a, struct orange_timer
 RB_PROTOTYPE(orange_timer_tree, orange_timer, entry, __orange_timer_cmp);
 RB_GENERATE(orange_timer_tree, orange_timer, entry, __orange_timer_cmp);
 
-struct orange_timer_disc timer_disc;
+static struct orange_timer_disc	timer_disc;
+static struct orange_thread_handle thread_handle;
+static int						   timer_func_running = 0;
 
 static void __orange_timer_lock(void)
 {
@@ -85,7 +89,7 @@ static struct orange_timer* __orange_timer_find(int timer_id)
 	return RB_FIND(orange_timer_tree, &(timer_disc.timer_tree), (struct orange_timer*) &cmp);
 }
 
-static int __orange_timer_set(uint32_t interval, orange_timer_type_t timer_type, orange_timer_func_t* timeout_func, void* data)
+static int __orange_timer_set(uint32_t interval, orange_timer_type_t timer_type, orange_timer_func_t* timeout_func, void* data, int data_size)
 {
 	int					 timer_id = INVALID_TIMER_ID;
 	struct orange_timer* timer	= NULL;
@@ -102,6 +106,7 @@ static int __orange_timer_set(uint32_t interval, orange_timer_type_t timer_type,
 	timer->elapse		= 0;
 	timer->times		= timer_type;
 	timer->data			= data;
+	timer->data_size	= data_size;
 	timer->index++;
 	if (timer->index >= 300) {
 		timer->index = 0;
@@ -116,6 +121,51 @@ exit:
 	return timer_id;
 }
 
+static void* __orange_timer_process(void* param)
+{
+	struct orange_timer* timer = NULL;
+	struct orange_timer* tmp   = NULL;
+	struct timeval		 timeout;
+	int					 ret;
+
+	while (timer_func_running) {
+		timeout.tv_sec  = 0;
+		timeout.tv_usec = 1000 * timer_disc.ms_seconds;
+		ret				= select(0, 0, 0, 0, &timeout);
+
+		if (0 == ret) {
+			TAILQ_FOREACH_SAFE(timer, &(timer_disc.list_head), list, tmp)
+			{
+				if (timer) {
+					timer->elapse++;
+					if (timer->elapse == timer->interval) {
+						if (NULL != timer->timeout_func) {
+							orange_timer_func_t* timeout_func;
+							__orange_timer_lock();
+							timeout_func = timer->timeout_func;
+							__orange_timer_unlock();
+							if (timeout_func) {
+								timeout_func(timer->timer_id, timer->data, timer->data_size);
+							}
+							__orange_timer_lock();
+							if (timer->times == ORANGE_TIMER_ONCE) {
+								RB_REMOVE(orange_timer_tree, &(timer_disc.timer_tree), timer);
+								TAILQ_REMOVE(&(timer_disc.list_head), timer, list);
+								__orange_timer_destroy(timer);
+							} else if (timer->times == ORANGE_TIMER_CONTINUED) {
+								timer->elapse = 0;
+							}
+							__orange_timer_unlock();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return NULL;
+}
+
 static int __orange_timer_init(int count, uint32_t ms_seconds)
 {
 	int ret = -1;
@@ -124,7 +174,9 @@ static int __orange_timer_init(int count, uint32_t ms_seconds)
 		goto exit;
 	}
 
-	ret = 0;
+	timer_func_running = 1;
+	ret				   = orange_thread_create(&thread_handle, __orange_timer_process, NULL);
+
 exit:
 	return ret;
 }
@@ -152,7 +204,7 @@ int orange_timer_kill(int timer_id)
 	return 0;
 }
 
-int orange_timer_set(uint32_t timeout, orange_timer_type_t timer_type, orange_timer_func_t* timeout_func, void* data)
+int orange_timer_set(uint32_t timeout, orange_timer_type_t timer_type, orange_timer_func_t* timeout_func, void* data, int data_size)
 {
 	int timer_id = INVALID_TIMER_ID;
 
@@ -174,7 +226,7 @@ int orange_timer_set(uint32_t timeout, orange_timer_type_t timer_type, orange_ti
 		goto exit;
 	}
 
-	timer_id = __orange_timer_set(timeout, timer_type, timeout_func, data);
+	timer_id = __orange_timer_set(timeout, timer_type, timeout_func, data, data_size);
 
 exit:
 	orange_log(ORANGE_LOG_INFO, "%s:%d end timer_id: %d.\n", __func__, __LINE__, timer_id);

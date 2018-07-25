@@ -20,5 +20,7 @@ typedef enum orange_timer_type {
 
 typedef int orange_timer_func_t(int id, void* data, int data_len);
 
+extern int orange_timer_init(void);
+extern int orange_timer_init_ex(uint32_t ms_seconds);
 extern int orange_timer_kill(int timer_id);
-extern int orange_timer_set(uint32_t timeout, orange_timer_type_t timer_type, orange_timer_func_t* timeout_func, void* data);
+extern int orange_timer_set(uint32_t timeout, orange_timer_type_t timer_type, orange_timer_func_t* timeout_func, void* data, int data_size);

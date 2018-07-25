@@ -15,11 +15,15 @@ static int __orange_timeout_func(int id, void* data, int data_len)
 
 static int orange_watchdog_init(void)
 {
+	int ret;
 	snprintf(orange_watchdog_description, 127, "Orange Watchdog Module " ORANGE_VERSION_FORMAT "-%s #%u: %s", ORANGE_VERSION_QUAD(orange_watchdog_version),
 			 orange_version_type(orange_watchdog_version_type), orange_watchdog_build_num, orange_watchdog_build_date);
 
 	orange_log(ORANGE_LOG_INFO, "%s\n", orange_watchdog_description);
-	orange_timer_set(100, ORANGE_TIMER_CONTINUED, __orange_timeout_func, NULL);
+	ret = orange_timer_init();
+	if (0 == ret) {
+		orange_timer_set(100, ORANGE_TIMER_CONTINUED, __orange_timeout_func, NULL, 0);
+	}
 
 	return 0;
 }
