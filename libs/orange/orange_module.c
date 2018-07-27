@@ -3,7 +3,7 @@
 #include "orange_elf.h"
 #include "orange_log.h"
 #include "orange_queue.h"
-#include "orange_spinlock.h"
+#include "orange_mutex.h"
 
 #if 0
 #define DEBUGP printf
@@ -31,7 +31,7 @@ typedef struct orange_module_entry {
 typedef struct orange_module_session {
 	char			  path[ORANGE_MODULE_PATH_LEN_MAX];
 	int				  count;
-	orange_spinlock_t lock;
+	orange_mutex_t lock;
 	TAILQ_HEAD(orange_module_list, orange_module_entry) list;
 } orange_module_session_t;
 
@@ -453,9 +453,9 @@ int orange_module_load(struct orange_module_session* module_session, char* modul
 	DEBUGP("%s: begin, module_name: %s\n", __func__, module_name);
 
 	if (module_session != NULL) {
-		orange_spinlock_lock(&module_session->lock);
+		orange_mutex_lock(&module_session->lock);
 		ret = __orange_module_load_unlock(module_session, module_name, 0, NULL);
-		orange_spinlock_unlock(&module_session->lock);
+		orange_mutex_unlock(&module_session->lock);
 	}
 
 	DEBUGP("%s: finished, return: %d\n", __func__, ret);
@@ -546,7 +546,7 @@ int orange_module_unload(struct orange_module_session* module_session, char* mod
 
 	orange_log(ORANGE_LOG_DEBUG, "try to unloading module: %s\n", module_name);
 
-	orange_spinlock_lock(&module_session->lock);
+	orange_mutex_lock(&module_session->lock);
 	DEBUGP("%s: path: %s, module_name: %s\n", __func__, module_session->path, module_name);
 
 	TAILQ_FOREACH_SAFE(module_entry, &module_session->list, entry, temp_entry)
@@ -583,7 +583,7 @@ int orange_module_unload(struct orange_module_session* module_session, char* mod
 
 exit:
 	if (module_session != NULL) {
-		orange_spinlock_unlock(&module_session->lock);
+		orange_mutex_unlock(&module_session->lock);
 	}
 
 	if (ret != 0) {
@@ -637,7 +637,7 @@ struct orange_module_session* orange_module_open(char* path)
 	if (module_session != NULL) {
 		strncpy(module_session->path, path, ORANGE_MODULE_PATH_LEN_MAX);
 		TAILQ_INIT(&module_session->list);
-		orange_spinlock_init(&module_session->lock, "module lock");
+		orange_mutex_create(&module_session->lock);
 	}
 	return module_session;
 }
@@ -649,7 +649,7 @@ void orange_module_close(struct orange_module_session* module_session)
 	}
 
 	orange_module_unload_all(module_session);
-	orange_spinlock_destroy(&module_session->lock);
+	orange_mutex_delete(&module_session->lock);
 	orange_free(module_session);
 exit:
 	return;
