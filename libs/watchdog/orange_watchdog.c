@@ -22,7 +22,7 @@ static int orange_watchdog_init(void)
 	orange_log(ORANGE_LOG_INFO, "%s\n", orange_watchdog_description);
 	ret = orange_timer_init();
 	if (0 == ret) {
-		orange_timer_set(100, ORANGE_TIMER_CONTINUED, __orange_timeout_func, NULL, 0);
+		orange_timer_set(10, ORANGE_TIMER_ONCE, __orange_timeout_func, NULL, 0);
 	}
 
 	return 0;

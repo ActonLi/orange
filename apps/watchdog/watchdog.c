@@ -34,19 +34,16 @@ int main(int argc, char** argv)
 
 	__watchdog_parse_options(argc, argv);
 
+	if (opt.daemon) {
+		orange_daemon_create(orange_get_short_proc_name(argv[0]));
+	}
+
 	module_session = orange_module_open("/home/orange/git/orange/apps/watchdog");
 	if (module_session == NULL) {
 		return -1;
 	}
 
 	orange_module_load_all(module_session);
-
-	if (opt.daemon) {
-		orange_daemon_create(orange_get_short_proc_name(argv[0]));
-	}
-
-	while (1)
-		;
 
 	return 0;
 }

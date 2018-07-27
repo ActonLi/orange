@@ -1,4 +1,5 @@
 #include "orange_daemon.h"
+#include "orange_log.h"
 
 #if 0
 #define DEBUGP printf
@@ -120,15 +121,53 @@ static void __orange_daemon_sighup(int signo)
 	return __orange_daemon_reread();
 }
 
+static void __orange_detach_terminal(void)
+{
+	int handle;
+	int pgrp_id;
+
+	orange_log(ORANGE_LOG_DEBUG, "detaching terminal...\n");
+
+	orange_log_close();
+
+	for (handle = 3; handle >= 0; handle--) {
+		close(handle);
+	}
+
+	errno = 0;
+
+	orange_log_open();
+
+	if (getpgrp() == getpid()) {
+		orange_log(ORANGE_LOG_DEBUG, "already process group leader.\n");
+	} else {
+		orange_log(ORANGE_LOG_DEBUG, "moving to new session group\n");
+		orange_log_close();
+
+		pgrp_id = setsid();
+
+		orange_log_open();
+
+		if (pgrp_id == -1) {
+			orange_log(ORANGE_LOG_ERR, "setsid() failed. error: %d\n", errno);
+		}
+	}
+
+	return;
+}
+
 void orange_daemon_create(char* daemon_name)
 {
 	struct sigaction sa;
 
+	orange_log_init(daemon_name, 1, 1, -1);
 	__orange_daemon_init();
 
 	if (__orange_daemon_already_running(daemon_name)) {
 		exit(1);
 	}
+
+	__orange_detach_terminal();
 
 	sa.sa_handler = __orange_daemon_sigterm;
 	sigemptyset(&sa.sa_mask);
