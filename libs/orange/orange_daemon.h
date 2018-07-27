@@ -5,5 +5,6 @@
 
 #define DAEMON_NAME_SIZE 32
 extern void orange_daemon_create(char* daemon_name);
+extern int orange_daemon_is_terminated(void);
 
 #endif

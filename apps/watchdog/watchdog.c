@@ -38,12 +38,18 @@ int main(int argc, char** argv)
 		orange_daemon_create(orange_get_short_proc_name(argv[0]));
 	}
 
-	module_session = orange_module_open("/home/orange/git/orange/apps/watchdog");
+	module_session = orange_module_open("/root/git/orange/apps/watchdog");
 	if (module_session == NULL) {
 		return -1;
 	}
 
 	orange_module_load_all(module_session);
+
+	orange_log(ORANGE_LOG_INFO, "%s started successfully.\n", orange_get_short_proc_name(argv[0]));
+    while(orange_daemon_is_terminated() == -1) {
+        usleep(100);
+    }
+	orange_log(ORANGE_LOG_INFO, "%s finished.\n", orange_get_short_proc_name(argv[0]));
 
 	return 0;
 }

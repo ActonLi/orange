@@ -1,8 +1,9 @@
 #include "orange_timer.h"
 #include "../orange/orange_queue.h"
-#include "../orange/orange_spinlock.h"
+#include "../orange/orange_mutex.h"
 #include "../orange/orange_thread.h"
 #include "../orange/orange_tree.h"
+#include "../orange/orange_log.h"
 #include "orange_timer_version.h"
 
 ORANGE_VERSION_GENERATE(orange_timer, 1, 1, 1, ORANGE_VERSION_TYPE_ALPHA);
@@ -29,7 +30,7 @@ typedef struct orange_timer_disc {
 	uint32_t		  num;
 	uint32_t		  max_num;
 	uint32_t		  ms_seconds;
-	orange_spinlock_t lock;
+	orange_mutex_t lock;
 
 	RB_HEAD(orange_timer_tree, orange_timer) timer_tree;
 	TAILQ_HEAD(orange_timer_head, orange_timer) list_head;
@@ -45,12 +46,12 @@ static int						   timer_func_running = 0;
 
 static void __orange_timer_lock(void)
 {
-	orange_spinlock_lock(&timer_disc.lock);
+	orange_mutex_lock(&timer_disc.lock);
 }
 
 static void __orange_timer_unlock(void)
 {
-	orange_spinlock_unlock(&timer_disc.lock);
+	orange_mutex_unlock(&timer_disc.lock);
 }
 
 static inline int __orange_timer_cmp(struct orange_timer* a, struct orange_timer* b)
@@ -258,7 +259,7 @@ static int __orange_timer_module_init(void)
 	timer_disc.ms_seconds = 100;
 
 	TAILQ_INIT(&timer_disc.list_head);
-	orange_spinlock_init(&timer_disc.lock, "timer list lock");
+    orange_mutex_create(&timer_disc.lock);
 
 	return 0;
 }
@@ -276,7 +277,7 @@ static void __orange_timer_module_fini(void)
 		}
 	}
 
-	orange_spinlock_destroy(&timer_disc.lock);
+	orange_mutex_delete(&timer_disc.lock);
 	memset(&timer_disc, 0, sizeof(struct orange_timer_disc));
 
 	return;

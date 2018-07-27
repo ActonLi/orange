@@ -1,6 +1,4 @@
-#ifndef __ORANGE_MODULE_H__
-#define __ORANGE_MODULE_H__
-
+#pragma once
 #include "orange.h"
 
 /*
@@ -256,4 +254,3 @@ extern void orange_module_close(struct orange_module_session* module_session);
 
 extern int orange_modules_load(char* path);
 
-#endif /* !__ORANGE_MODULE_H_ */

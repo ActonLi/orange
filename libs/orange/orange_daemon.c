@@ -9,6 +9,8 @@
 
 #define FILE_PATH_LEN_MAX 128
 
+static int terminate = -1;
+
 static void __orange_daemon_init(void)
 {
 	int				 i, fd0, fd1, fd2;
@@ -84,6 +86,8 @@ static int __orange_daemon_already_running(char* daemon_name)
 	char buf[16];
 	int  fd;
 
+    orange_log_error("%s:%d begin daemon name: %s\n", __func__, __LINE__, daemon_name);
+
 	snprintf(lockfile_name, FILE_PATH_LEN_MAX, "/var/run/%s.pid", daemon_name);
 
 	fd = open(lockfile_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -156,14 +160,44 @@ static void __orange_detach_terminal(void)
 	return;
 }
 
+static void __orange_daemon_on_signal(int signal_code)
+{
+    switch(signal_code){
+        case SIGHUP:
+            terminate = 1;
+            break;
+        case SIGTERM:
+        case SIGKILL:
+            terminate = 1;
+            break;
+        case SIGINT:
+            signal(SIGINT, SIG_IGN);
+            terminate = 1;
+            break;
+        case SIGXFSZ:
+            break;
+        default:
+            break;
+    }
+
+    return;
+}
+
 void orange_daemon_create(char* daemon_name)
 {
 	struct sigaction sa;
+
+    signal(SIGHUP, __orange_daemon_on_signal);
+    signal(SIGTERM, __orange_daemon_on_signal);
+    signal(SIGKILL, __orange_daemon_on_signal);
+    signal(SIGINT, __orange_daemon_on_signal);
+    signal(SIGXFSZ, __orange_daemon_on_signal);
 
 	orange_log_init(daemon_name, 1, 1, -1);
 	__orange_daemon_init();
 
 	if (__orange_daemon_already_running(daemon_name)) {
+        orange_log(ORANGE_LOG_EMERG, "%s already running...\n", daemon_name);
 		exit(1);
 	}
 
@@ -186,4 +220,9 @@ void orange_daemon_create(char* daemon_name)
 	if (sigaction(SIGHUP, &sa, NULL) < 0) {
 		exit(1);
 	}
+}
+
+int orange_daemon_is_terminated(void)
+{
+    return terminate;
 }
