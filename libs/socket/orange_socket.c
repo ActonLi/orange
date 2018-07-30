@@ -4,9 +4,9 @@
 
 ORANGE_VERSION_GENERATE(orange_socket, 1, 1, 1, ORANGE_VERSION_TYPE_ALPHA);
 
-struct orange_socket* orange_socket_create(struct orange_socket_config *config) 
+struct orange_socket* orange_socket_create(struct orange_socket_config* config)
 {
-    return NULL;
+	return NULL;
 }
 
 static int __orange_socket_module_init(void)
