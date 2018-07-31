@@ -4,9 +4,27 @@
 
 ORANGE_VERSION_GENERATE(orange_socket, 1, 1, 1, ORANGE_VERSION_TYPE_ALPHA);
 
+struct orange_socket_func socket_funcs[ORANGE_SOCKET_TYPE_MAX + 1];
+
 struct orange_socket* orange_socket_create(struct orange_socket_config* config)
 {
 	return NULL;
+}
+
+int orange_socket_func_register(uint8_t type, struct orange_socket_func* func)
+{
+	if (type == ORANGE_SOCKET_TYPE_NONE || type > ORANGE_SOCKET_TYPE_MAX || NULL == func) {
+		return -1;
+	}
+
+	memcpy(&(socket_funcs[type]), func, sizeof(struct orange_socket_func));
+	return 0;
+}
+
+void orange_socket_func_unregister(uint8_t type)
+{
+	memset(&(socket_funcs[type]), 0, sizeof(struct orange_socket_func));
+	return;
 }
 
 static int __orange_socket_module_init(void)

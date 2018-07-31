@@ -180,4 +180,30 @@ extern __thread uint8_t orange_cpu_id;
 
 #define strlen_min(str, min_len) (min(strlen(str), min_len - 1))
 
+#define IPADDR_FMT  "%u.%u.%u.%u"
+#define NIPQUAD(addr) \
+        ((unsigned char *)&addr)[0], \
+        ((unsigned char *)&addr)[1], \
+        ((unsigned char *)&addr)[2], \
+        ((unsigned char *)&addr)[3]
+
+#define IP6ADDR_FMT  "%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X"
+#define NIP6QUAD(addr) \
+        ((unsigned char *)&addr)[0], \
+        ((unsigned char *)&addr)[1], \
+        ((unsigned char *)&addr)[2], \
+        ((unsigned char *)&addr)[3], \
+        ((unsigned char *)&addr)[4], \
+        ((unsigned char *)&addr)[5], \
+        ((unsigned char *)&addr)[6], \
+        ((unsigned char *)&addr)[7], \
+        ((unsigned char *)&addr)[8], \
+        ((unsigned char *)&addr)[9], \
+        ((unsigned char *)&addr)[10], \
+        ((unsigned char *)&addr)[11], \
+        ((unsigned char *)&addr)[12], \
+        ((unsigned char *)&addr)[13], \
+        ((unsigned char *)&addr)[14], \
+        ((unsigned char *)&addr)[15] 
+
 #endif // __ORANGE_H__
