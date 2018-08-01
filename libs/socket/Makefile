@@ -12,7 +12,8 @@ LDFLAGS += -L /usr/local/lib -lorange
 
 all: orange_socket_version.c orange_socket_version.o orange_socket 
 
-LIB_OBJS = orange_socket.o orange_socket_version.o
+LIB_OBJS = orange_socket.o orange_socket_tcp.o orange_socket_udp.o \
+		   orange_socket_un.o orange_socket_version.o
 
 orange_socket: $(LIB_OBJS)
 	${CC} ${CFLAGS} ${LIB_OBJS} -shared -o orange_socket.so ${LDFLAGS}  

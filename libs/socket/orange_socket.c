@@ -1,5 +1,9 @@
-#include "orange_socket.h"
 #include "../orange/orange_log.h"
+
+#include "orange_socket.h"
+#include "orange_socket_tcp.h"
+#include "orange_socket_udp.h"
+#include "orange_socket_un.h"
 #include "orange_socket_version.h"
 
 ORANGE_VERSION_GENERATE(orange_socket, 1, 1, 1, ORANGE_VERSION_TYPE_ALPHA);
@@ -202,11 +206,19 @@ static int __orange_socket_module_init(void)
 
 	orange_log(ORANGE_LOG_INFO, "%s\n", orange_socket_description);
 
+	orange_socket_un_init();
+	orange_socket_udp_init();
+	orange_socket_tcp_init();
+
 	return 0;
 }
 
 static void __orange_socket_module_fini(void)
 {
+	orange_socket_un_fini();
+	orange_socket_udp_fini();
+	orange_socket_tcp_fini();
+	orange_log(ORANGE_LOG_INFO, "Orange Socket Module unloaded.\n");
 	return;
 }
 

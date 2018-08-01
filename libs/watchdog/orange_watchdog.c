@@ -30,6 +30,7 @@ static int orange_watchdog_init(void)
 
 static void orange_watchdog_fini(void)
 {
+	orange_log(ORANGE_LOG_INFO, "Orange watchdog Module unloaded.\n");
 	return;
 }
 

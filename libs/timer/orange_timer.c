@@ -1,9 +1,9 @@
 #include "orange_timer.h"
-#include "../orange/orange_queue.h"
+#include "../orange/orange_log.h"
 #include "../orange/orange_mutex.h"
+#include "../orange/orange_queue.h"
 #include "../orange/orange_thread.h"
 #include "../orange/orange_tree.h"
-#include "../orange/orange_log.h"
 #include "orange_timer_version.h"
 
 ORANGE_VERSION_GENERATE(orange_timer, 1, 1, 1, ORANGE_VERSION_TYPE_ALPHA);
@@ -27,9 +27,9 @@ typedef struct orange_timer {
 } orange_timer_t;
 
 typedef struct orange_timer_disc {
-	uint32_t		  num;
-	uint32_t		  max_num;
-	uint32_t		  ms_seconds;
+	uint32_t	   num;
+	uint32_t	   max_num;
+	uint32_t	   ms_seconds;
 	orange_mutex_t lock;
 
 	RB_HEAD(orange_timer_tree, orange_timer) timer_tree;
@@ -259,7 +259,7 @@ static int __orange_timer_module_init(void)
 	timer_disc.ms_seconds = 100;
 
 	TAILQ_INIT(&timer_disc.list_head);
-    orange_mutex_create(&timer_disc.lock);
+	orange_mutex_create(&timer_disc.lock);
 
 	return 0;
 }
@@ -279,6 +279,8 @@ static void __orange_timer_module_fini(void)
 
 	orange_mutex_delete(&timer_disc.lock);
 	memset(&timer_disc, 0, sizeof(struct orange_timer_disc));
+
+	orange_log(ORANGE_LOG_INFO, "Orange timer Module unloaded.\n");
 
 	return;
 }
