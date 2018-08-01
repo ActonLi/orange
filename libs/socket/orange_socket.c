@@ -8,7 +8,28 @@ struct orange_socket_func socket_funcs[ORANGE_SOCKET_TYPE_MAX + 1];
 
 struct orange_socket* orange_socket_create(struct orange_socket_config* config)
 {
-	return NULL;
+	struct orange_socket* socket = NULL;
+
+	if (NULL == config || config->socket_type == ORANGE_SOCKET_TYPE_NONE || config->socket_type > ORANGE_SOCKET_TYPE_MAX) {
+		goto exit;
+	}
+
+	socket = malloc(sizeof(struct orange_socket));
+	if (NULL == socket) {
+		goto exit;
+	}
+
+	socket->socket_fd = socket_funcs[config->socket_type].create(config->protocol, (struct sockaddr*) &(config->local_address.address),
+																 config->local_address.address_size, config->backlog, config->is_server);
+	if (socket->socket_fd <= 0) {
+		free(socket);
+		socket = NULL;
+		goto exit;
+	}
+
+	memcpy(&(socket->config), config, sizeof(struct orange_socket_config));
+exit:
+	return socket;
 }
 
 int orange_socket_func_register(uint8_t type, struct orange_socket_func* func)
