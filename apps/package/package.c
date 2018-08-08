@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #if 0
 #define DEBUGP printf
@@ -17,6 +18,7 @@ typedef struct config_info {
 	char* image;
 	char* sn;
 	char* model;
+	char* output;
 } config_info_t;
 
 static struct config_info config;
@@ -35,7 +37,7 @@ static int __package_parse(int* argc, char*** argv)
 	char* key;
 	char* sign;
 	char* xml;
-	;
+	char* output;
 	char* image;
 	char* sn;
 	char* model;
@@ -57,6 +59,7 @@ static int __package_parse(int* argc, char*** argv)
 	optrega(&image, OPT_STRING, 'i', "image", " image filename");
 	optrega(&sw, OPT_INT, 't', "type", " software id");
 	optrega(&model, OPT_STRING, 'm', "model", " xml model filename");
+	optrega(&output, OPT_STRING, 'o', "output", " output .zip file");
 	optrega(&usage, OPT_FLAG, 'h', "help", " display usage info");
 
 	opt(argc, argv);
@@ -81,6 +84,10 @@ static int __package_parse(int* argc, char*** argv)
 
 	if (optinvoked(&xml)) {
 		config.xml = xml;
+	}
+
+	if (optinvoked(&output)) {
+		config.output = output;
 	}
 
 	if (optinvoked(&image)) {
@@ -117,7 +124,7 @@ static int __package_get_file_md5(char* filename, char* md5)
 			md5[i] = cmd[i];
 		}
 
-		printf("filename: %s, md5: %s\n", filename, md5);
+		// printf("filename: %s, md5: %s\n", filename, md5);
 		pclose(fp);
 	}
 	return size;
@@ -180,13 +187,13 @@ static int  __package_create_xml(void)
 		filename = config.image;
 	}
 
-	printf("filesize: %d, filename: %s, md5: %s\n", file_size, filename, md5);
+	// printf("filesize: %d, filename: %s, md5: %s\n", file_size, filename, md5);
 
-	printf("buf: %s\n", buf);
+	// printf("buf: %s\n", buf);
 
 	snprintf(new_buf, 8192, buf, filename, file_size, md5, config.sn, config.sw_id);
 
-	printf("newbuf: %s\n", new_buf);
+	// printf("newbuf: %s\n", new_buf);
 
 	fp = fopen(config.xml, "w+");
 
@@ -254,11 +261,20 @@ static int __package_sign_xml(void)
 
 static int __package_zip_files(void)
 {
-	int  ret = 0;
-	char cmd[1024];
+	int	ret = 0;
+	char   cmd[1024];
+	char   zipname[64];
+	time_t t;
+	t = time(NULL);
+	struct tm* lt;
+	lt				 = localtime(&t);
+	char nowtime[24] = "";
+	strftime(nowtime, 24, "%Y%m%d%H%M%S", lt);
 
-	snprintf(cmd, 1024, "zip firmware.zip *.sign %s %s", config.xml, config.image);
-	printf("%s:%d cmd: %s\n", __func__, __LINE__, cmd);
+	snprintf(zipname, 64, "firmware_%s.zip", nowtime);
+
+	snprintf(cmd, 1024, "zip %s *.sign %s %s", config.output == NULL ? zipname : config.output, config.xml, config.image);
+	// printf("%s:%d cmd: %s\n", __func__, __LINE__, cmd);
 	ret = system(cmd);
 
 	ret = __package_get_system_return_value(ret);
