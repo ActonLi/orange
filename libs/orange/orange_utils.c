@@ -21,6 +21,93 @@ static int __htoi(char* s)
 	return (value);
 }
 
+static char __orange_get_base64_value(char ch)
+{
+	if ((ch >= 'A') && (ch <= 'Z')) {
+		return ch - 'A';
+    }
+	if ((ch >= 'a') && (ch <= 'z')) {
+		return ch - 'a' + 26;
+    }
+	if ((ch >= '0') && (ch <= '9')) {
+		return ch - '0' + 52;
+    }
+
+	switch (ch) {
+		case '+':
+			return 62;
+		case '/':
+			return 63;
+		case '=':
+			return 0;
+		default:
+			return 0;
+	}
+}
+
+static char* base64_encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+int orange_base64_encode(unsigned char* buf, const unsigned char* text, int size)
+{
+	int			 buflen			 = 0;
+
+	while (size > 0) {
+		*buf++ = base64_encoding[(text[0] >> 2) & 0x3f];
+		if (size > 2) {
+			*buf++ = base64_encoding[((text[0] & 3) << 4) | (text[1] >> 4)];
+			*buf++ = base64_encoding[((text[1] & 0xF) << 2) | (text[2] >> 6)];
+			*buf++ = base64_encoding[text[2] & 0x3F];
+		} else {
+			switch (size) {
+				case 1:
+					*buf++ = base64_encoding[(text[0] & 3) << 4];
+					*buf++ = '=';
+					*buf++ = '=';
+					break;
+				case 2:
+					*buf++ = base64_encoding[((text[0] & 3) << 4) | (text[1] >> 4)];
+					*buf++ = base64_encoding[((text[1] & 0x0F) << 2) | (text[2] >> 6)];
+					*buf++ = '=';
+					break;
+			}
+		}
+
+		text += 3;
+		size -= 3;
+		buflen += 4;
+	}
+
+	*buf = 0;
+	return buflen;
+}
+
+int orange_base64_decode(unsigned char* buf, char* text, int size)
+{
+	if (size % 4) {
+		return -1;
+    }
+
+	unsigned char chunk[4];
+	int			  parsenum = 0;
+
+	while (size > 0) {
+		chunk[0] = __orange_get_base64_value(text[0]);
+		chunk[1] = __orange_get_base64_value(text[1]);
+		chunk[2] = __orange_get_base64_value(text[2]);
+		chunk[3] = __orange_get_base64_value(text[3]);
+
+		*buf++ = (chunk[0] << 2) | (chunk[1] >> 4);
+		*buf++ = (chunk[1] << 4) | (chunk[2] >> 2);
+		*buf++ = (chunk[2] << 6) | (chunk[3]);
+
+		text += 4;
+		size -= 4;
+		parsenum += 3;
+	}
+
+	return parsenum;
+}
+
 char* orange_url_encode(char const* s, int len, int* new_length)
 {
 	register unsigned char c;
@@ -458,3 +545,5 @@ int orange_do_system(const char* x, int timeout)
 
 	return ret;
 }
+
+

@@ -4,6 +4,8 @@
 #include "orange.h"
 #define MAXPATH 256
 
+extern int orange_base64_decode(unsigned char* buf, char* text, int size);
+extern int orange_base64_encode(unsigned char* buf, const unsigned char* text, int size);
 extern uint32_t orange_atoi(const char* s);
 extern uint64_t orange_atoi_64(const char* s);
 extern int orange_itoa(int num, char* s, int* len);
