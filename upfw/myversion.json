@@ -1,9 +1,0 @@
-{
-	"version" : "2.1.0",
-				"build" : 4185,
-				"minVersion" : "1.1.0",
-							   "serialMask" : "ABB7FFFFFFFF",
-											  "firmwareName" : "sysap-update-20170301-2.1.2-4185.img",
-															   "xmlFile" : "ABB7FFFFFFFF.xml",
-																		   "local" : true
-}
