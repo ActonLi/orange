@@ -46,5 +46,6 @@ include $(TOP_DIR)/libs/orange/orange.mk
 include $(TOP_DIR)/libs/socket/socket.mk
 include $(TOP_DIR)/libs/timer/timer.mk
 include $(TOP_DIR)/libs/watchdog/watchdog.mk
+include $(TOP_DIR)/libs/mevent/mevent.mk
 
 .PHONY: appsclean distclean libs apps all
