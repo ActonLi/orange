@@ -1,27 +1,6 @@
-SHELL=/bin/sh
-PREFIX=/usr/local/
+INCLUDE         := -g -I${LIBS_DIR}
+LDFLAGS         := -L/usr/lib -L/lib -L/usr/local/lib -lrt -ldl -lpthread 
+TARGET_TYPE:="$(LIB_SO_SUBFIX)"
 
-CFLAGS= -O2 -pipe -fPIC -fno-strict-aliasing -fno-common \
-			   -Wall -Werror -Wno-pointer-sign -Wno-unused-parameter \
-			   -Wredundant-decls -Wnested-externs -Wstrict-prototypes \
-			   -Wmissing-prototypes -Wpointer-arith -Winline -Wcast-qual \
-			   -Wundef -g -std=gnu9x -fstack-protector
+include $(BUILD_COMMON_MK)
 
-CFLAGS += -I/usr/local/include
-LDFLAGS += -L /usr/local/lib -lrt -ldl -lpthread
-
-all: liborange 
-
-LIB_OBJS = orange_log.o orange_file.o orange_utils.o \
-		   log/orange_filelog.o log/orange_consolelog.o \
-		   log/orange_syslog.o orange_daemon.o orange_options.o \
-		   orange_module.o orange_elf.o orange_hash.o orange_thread.o \
-		   orange_mutex.o
-
-liborange: $(LIB_OBJS)
-	${CC} ${CFLAGS} ${LIB_OBJS} -shared -o liborange.so ${LDFLAGS}  
-
-distclean: clean
-clean:
-	rm -f *.o log/*.o *.so
-	

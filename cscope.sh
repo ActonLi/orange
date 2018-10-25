@@ -51,6 +51,9 @@ if [ "$current_libs_dir" != "$phoenix_libs_dir" ] && [ "$phoenix_libs_dir" != ""
     sed -i "s/\(^PHOENIX_LIB_SRC=\)\/root\/$phoenix_libs_dir\/libs/\1\/root\/$current_libs_dir\/libs/" ~/.bashrc
 fi
 
+ORANGE_SRC_DIR=`pwd`
+export ORANGE_SRC_DIR
+
 chmod a+x ~/.bashrc
 source ~/.bashrc
 

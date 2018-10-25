@@ -1,10 +1,10 @@
-#include "watchdog.h"
-#include "orange.h"
-#include "orange_daemon.h"
-#include "orange_log.h"
-#include "orange_module.h"
-#include "orange_options.h"
-#include "orange_utils.h"
+#include "watchdog/watchdog.h"
+#include "orange/orange.h"
+#include "orange/orange_daemon.h"
+#include "orange/orange_log.h"
+#include "orange/orange_module.h"
+#include "orange/orange_options.h"
+#include "orange/orange_utils.h"
 
 #define DEFAULT_WATCHDOG_CONFIG "wtd.conf"
 

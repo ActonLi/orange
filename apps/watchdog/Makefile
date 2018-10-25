@@ -1,23 +1,8 @@
-SHELL=/bin/sh
-PREFIX=/usr/local/
+CFLAGS		 := -O2 -pipe -fPIC -Wall -Werror
+INCLUDE      := -g -I${LIBS_DIR} -I${APPS_DIR}
+LDFLAGS      := -L$(PUBLIC_LIB_DIR) -lorange
 
-CFLAGS=-O2 -pipe -fPIC -fno-strict-aliasing -fno-common \
-			   -Wall -Werror -Wno-pointer-sign -Wno-unused-parameter \
-			   -Wredundant-decls -Wnested-externs -Wstrict-prototypes \
-			   -Wmissing-prototypes -Wpointer-arith -Winline -Wcast-qual \
-			   -Wundef -g -std=gnu9x -fstack-protector
+TARGET_TYPE:="exe"
 
-CFLAGS += -I/usr/local/include -I../../libs/timer -I../../libs/orange
-LDFLAGS += -L../../libs/orange/ -lorange -ldl
-
-all: watchdog 
-
-OBJS = watchdog.o
-
-watchdog: $(OBJS)
-	${CC} ${CFLAGS} ${OBJS} -o watchdogd ${LDFLAGS}  
-
-distclean: clean
-clean:
-	rm -f *.o watchdogd
+include $(BUILD_COMMON_MK)
 	
