@@ -2,7 +2,7 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
 /* Define to 1 if the elf64_getehdr function is in libelf.a. */
-#define HAVE_ELF64_GETEHDR 1
+/* #undef HAVE_ELF64_GETEHDR */
 
 /* Define to 1 if the Elf64_Rel structure has r_info field. */
 #define HAVE_ELF64_R_INFO 1
@@ -14,13 +14,13 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <libelf.h> header file. */
-#define HAVE_LIBELF_H 1
+/* #undef HAVE_LIBELF_H */
 
 /* Define to 1 if you have the <libelf/libelf.h> header file. */
-#define HAVE_LIBELF_LIBELF_H 1
+/* #undef HAVE_LIBELF_LIBELF_H */
 
 /* Define 1 if off64 is defined via libelf with GNU_SOURCE. */
-#define HAVE_LIBELF_OFF64_OK 1
+/* #undef HAVE_LIBELF_OFF64_OK */
 
 /* Define to header that first defines elf. */
 #define HAVE_LOCATION_OF_LIBELFHEADER <elf.h>
@@ -32,7 +32,7 @@
 /* #undef HAVE_NONSTANDARD_PRINTF_64_FORMAT */
 
 /* Define 1 if plain libelf builds. */
-#define HAVE_RAW_LIBELF_OK 1
+/* #undef HAVE_RAW_LIBELF_OK */
 
 /* Define 1 if regex seems to be defined */
 #define HAVE_REGEX 1
@@ -68,7 +68,7 @@
 #define HAVE_UNUSED_ATTRIBUTE 1
 
 /* Define 1 if zlib (decompression library) seems available. */
-/* #undef HAVE_ZLIB */
+#define HAVE_ZLIB 1
 
 /* See if __uint32_t is predefined in the compiler. */
 /* #undef HAVE___UINT32_T */

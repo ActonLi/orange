@@ -8,7 +8,7 @@
 srcdir =	.
 
 
-prefix =	/home/orange/libdwarf
+prefix =	/usr/local
 exec_prefix =	${prefix}
 bindir =	$(exec_prefix)/bin
 libdir =	$(exec_prefix)/lib
@@ -21,22 +21,22 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA =	${INSTALL} -m 644
 DATAROOT =      ${prefix}/share
 SHELL =		/bin/sh
-CC =		gcc
-AR =		ar
+CC =		arm-poky-linux-gnueabi-gcc  -march=armv7-a -mthumb-interwork -mfloat-abi=hard -mfpu=neon -mtune=cortex-a9 --sysroot=/opt/poky/1.6.1/sysroots/cortexa9hf-vfp-neon-poky-linux-gnueabi
+AR =		arm-poky-linux-gnueabi-ar
 ARFLAGS =	@ARFLAGS@
 RM =		rm
-RANLIB =	ranlib
+RANLIB =	arm-poky-linux-gnueabi-ranlib
 DEFS =		-DHAVE_CONFIG_H
 # ../libdwarf gets us to local headers and a libdwarf 
 # archive, usually, so we assume it.
 dwfwall =       
 dwfsanitize =   
-dwfzlib =       
+dwfzlib =       -lz
 LIBDWARF_PATH = ../libdwarf
 DIRINC =        $(srcdir)/../libdwarf
 LIBS =		 -L../libdwarf -ldwarf -lelf $(dwfzlib)
 INCLUDES =	-I. -I$(srcdir) -I../libdwarf -I$(srcdir)/../libdwarf
-CFLAGS =	$(PREINCS)  -g -O2 $(INCLUDES) $(dwfwall) $(dwfsanitize) -DCONFPREFIX=${libdir} $(POSTINCS)
+CFLAGS =	$(PREINCS)   -O2 -pipe -g -feliminate-unused-debug-types $(INCLUDES) $(dwfwall) $(dwfsanitize) -DCONFPREFIX=${libdir} $(POSTINCS)
 LDFLAGS =	$(PRELIBS)   $(LIBS) $(dwfsanitize) $(POSTLIBS)
 #VG =            valgrind --leak-check=full  --show-leak-kinds=all
 VG =

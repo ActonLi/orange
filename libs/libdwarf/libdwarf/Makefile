@@ -32,7 +32,7 @@
 srcdir =	.
 
 
-prefix =	/home/orange/libdwarf
+prefix =	/usr/local
 exec_prefix =	${prefix}
 bindir =	$(exec_prefix)/bin
 libdir =	$(exec_prefix)/lib
@@ -41,22 +41,22 @@ INSTALL =	/usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA =	${INSTALL} -m 644
 SHELL =		/bin/sh
-CC =		gcc
-HOSTCC =	gcc
-AR =		ar
+CC =		arm-poky-linux-gnueabi-gcc  -march=armv7-a -mthumb-interwork -mfloat-abi=hard -mfpu=neon -mtune=cortex-a9 --sysroot=/opt/poky/1.6.1/sysroots/cortexa9hf-vfp-neon-poky-linux-gnueabi
+HOSTCC =	arm-poky-linux-gnueabi-gcc  -march=armv7-a -mthumb-interwork -mfloat-abi=hard -mfpu=neon -mtune=cortex-a9 --sysroot=/opt/poky/1.6.1/sysroots/cortexa9hf-vfp-neon-poky-linux-gnueabi
+AR =		arm-poky-linux-gnueabi-ar
 # For use with BSD ar (MacOSX ar) edit the ARFLAGS to be -s
 #ARFLAGS =	@ARFLAGS@
 RM =		rm
-RANLIB =	ranlib
+RANLIB =	arm-poky-linux-gnueabi-ranlib
 DEFS =		-DHAVE_CONFIG_H
 LIBS =		
 INCLUDES =	-I. -I$(srcdir)
 dwfpic =        -fPIC
 dwfwall =       
 dwfsanitize =   
-dwfzlib =       
+dwfzlib =       -lz
 SONAME =        libdwarf.so.1
-CFLAGS =	$(PREINCS)  -g -O2 $(INCLUDES) $(dwfpic) $(dwfwall) $(dwfsanitize)  $(POSTINCS)
+CFLAGS =	$(PREINCS)   -O2 -pipe -g -feliminate-unused-debug-types $(INCLUDES) $(dwfpic) $(dwfwall) $(dwfsanitize)  $(POSTINCS)
 LDFLAGS =	$(PRELIBS)  $(dwfsanitize) $(POSTLIBS) 
 HOSTCFLAGS =	$(CFLAGS)
 HOSTLDFLAGS =	$(PRELIBS)  

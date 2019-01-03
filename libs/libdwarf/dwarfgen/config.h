@@ -14,7 +14,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <libelf.h> header file. */
-#define HAVE_LIBELF_H 1
+/* #undef HAVE_LIBELF_H */
 
 /* Define to 1 if you have the <libelf/libelf.h> header file. */
 /* #undef HAVE_LIBELF_LIBELF_H */
@@ -47,7 +47,7 @@
 #define HAVE_UNISTD_H 1
 
 /* Define 1 if zlib (decompression library) seems available. */
-/* #undef HAVE_ZLIB */
+#define HAVE_ZLIB 1
 
 /* Define 1 if __uint32_t is in sgidefs.h. */
 /* #undef HAVE___UINT32_T_IN_SGIDEFS_H */
