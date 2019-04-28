@@ -147,6 +147,10 @@ static __inline__ const char* orange_version_type(int type)
 #define ORANGE_TIMEOUT_FOREVER ((uint32_t) -1)
 #define ORANGE_TIMEOUT_TIMED ((uint32_t) -2)
 
+#ifndef powerof2
+#define powerof2(x)     ((((x)-1)&(x))==0)
+#endif
+
 #define orange_malloc(size) malloc((size))
 #define orange_zalloc(size) calloc(1, (size))
 #define orange_zalloc_wait(size) calloc(1, (size))
