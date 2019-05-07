@@ -110,6 +110,9 @@ static void* __orange_thread_pool_func(void *arg)
 	for(;;) {
 		pthread_mutex_lock(&(g_orange_thread_pool->thread_lock));
 
+        orange_log_info("%s:%d thread_id: %lu task_count: %d, thread_count: %d\n", __func__, __LINE__, pthread_self(), 
+                g_orange_thread_pool->task_count, g_orange_thread_pool->thread_count);
+
 		while(g_orange_thread_pool->task_count == 0 && !g_orange_thread_pool->shutdown) {
 			pthread_cond_wait(&(g_orange_thread_pool->notify), &(g_orange_thread_pool->thread_lock));
 		}
@@ -194,6 +197,7 @@ static void* __orange_thread_pool_manage(void *arg)
     int thread_num;
 
     for(;;) {
+        orange_log_info("%s:%d task_count: %d, thread_count: %d\n", __func__, __LINE__, g_orange_thread_pool->task_count, g_orange_thread_pool->thread_count);
         if(g_orange_thread_pool->task_count > THREAD_WORKER_HIGH_RATIO * g_orange_thread_pool->thread_count) {
             thread_num =(g_orange_thread_pool->task_count - THREAD_WORKER_HIGH_RATIO * g_orange_thread_pool->thread_count) / THREAD_WORKER_HIGH_RATIO;
             if(g_orange_thread_pool->thread_count + thread_num > THREAD_POOL_MAX_NUM) {
@@ -313,7 +317,7 @@ static int orange_thread_pool_modevent(orange_module_t mod, int type, void* data
 
 	switch (type) {
 		case ORANGE_MOD_LOAD:
-			ret = __orange_thread_pool_init(64);
+			ret = __orange_thread_pool_init(32);
 			break;
 		case ORANGE_MOD_UNLOAD:
 			__orange_thread_pool_fini();

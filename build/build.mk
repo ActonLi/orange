@@ -42,11 +42,11 @@ CONFIG_P		= $(LIGHTBLUE)$(ORANGE_CONFIG_PRX)
 CONFIG_SUCCESS_P	= $(SUCCESS)$(ORANGE_CONFIG_PRX)
 
 include $(TOP_DIR)/apps/watchdog/watchdog.mk
-include $(TOP_DIR)/apps/test/test.mk
 include $(TOP_DIR)/libs/orange/orange.mk
 include $(TOP_DIR)/libs/socket/socket.mk
 include $(TOP_DIR)/libs/timer/timer.mk
 include $(TOP_DIR)/libs/watchdog/watchdog.mk
 include $(TOP_DIR)/libs/event/event.mk
+include $(TOP_DIR)/libs/thread_pool/thread_pool.mk
 
 .PHONY: appsclean distclean libs apps all

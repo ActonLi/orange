@@ -3,13 +3,35 @@
 #include "../orange/orange_spinlock.h"
 #include "../orange/orange_tree.h"
 #include "../timer/orange_timer.h"
+#include "../thread_pool/orange_thread_pool.h"
 #include "orange_watchdog_version.h"
 
 ORANGE_VERSION_GENERATE(orange_watchdog, 1, 1, 1, ORANGE_VERSION_TYPE_ALPHA);
 
+static void* __orange_thread_func(void* arg)
+{
+    int ret = *((int *)arg);
+	orange_log(ORANGE_LOG_INFO, "%s:%d.\n", __func__, __LINE__);
+}
+
 static int __orange_timeout_func(int id, void* data, int data_len)
 {
 	orange_log(ORANGE_LOG_INFO, "%s:%d.\n", __func__, __LINE__);
+
+    int ret;
+    ret = 1;
+    orange_thread_pool_add_task(__orange_thread_func, &ret, sizeof(ret));
+    ret++;
+    orange_thread_pool_add_task(__orange_thread_func, &ret, sizeof(ret));
+    ret++;
+    orange_thread_pool_add_task(__orange_thread_func, &ret, sizeof(ret));
+    ret++;
+    orange_thread_pool_add_task(__orange_thread_func, &ret, sizeof(ret));
+    ret++;
+    orange_thread_pool_add_task(__orange_thread_func, &ret, sizeof(ret));
+    ret++;
+    orange_thread_pool_add_task(__orange_thread_func, &ret, sizeof(ret));
+
 	return 0;
 }
 
