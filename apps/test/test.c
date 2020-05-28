@@ -10,6 +10,107 @@
 #include "string.h"
 #include "stdlib.h"
 
+
+static void __qrcode_scanner_rotate_270(unsigned char* src, int width, int height)
+{
+    int copy_bytes = 4;
+    int bytes_perline = width << 1;
+
+    printf("<==========================%s:%d size: %d===================================>\n", __func__, __LINE__, bytes_perline * height);
+
+    int step = height << 2;
+    int offset = bytes_perline - copy_bytes;
+
+    unsigned char* dst = (unsigned char*)malloc(bytes_perline * height);
+    if (NULL == dst) {
+        return;
+    }
+
+    unsigned char* dest = dst;
+    unsigned char* source = src;
+
+    unsigned char* psrc = NULL;
+    unsigned char* pdst[2] = {NULL, NULL};
+    int i, j, k;
+    unsigned char temp;
+
+    for (i = 0; i < bytes_perline; i += copy_bytes) {
+        pdst[1] = dest;
+        pdst[0] = dest + (height << 1);
+        psrc = source + offset;
+
+        for (j = 0; j < height; ++j) {
+            k = j % 2;
+            *((unsigned int *)pdst[k]) = *((unsigned int *)psrc);
+            if (1 == k) {
+                temp = *(pdst[1] + 1);
+                *(pdst[1] + 1) = *(pdst[0] - 1);
+                *(pdst[0] - 1) = temp;
+            }
+            pdst[k] += copy_bytes;
+            psrc += bytes_perline;
+        }
+
+        dest += step;
+        source -= copy_bytes;
+    }
+
+    memcpy(src, dst, width * height * 2);
+    printf("<==========================%s:%d size: %d===================================>\n", __func__, __LINE__, width * height * 2);
+
+    free(dst);
+
+    return; 
+}
+
+static void __qrcode_scanner_rotate_90(unsigned char* src, int width, int height)
+{
+    int copy_bytes = 4;
+    int bytes_perline = width << 1;
+
+    int step = height << 2;
+    int offset = (height - 1)* bytes_perline;
+
+    unsigned char* dst = (unsigned char*)malloc(bytes_perline * height);
+    if (NULL == dst) {
+        return;
+    }
+
+    unsigned char* dest = dst;
+    unsigned char* source = src;
+
+    unsigned char* psrc = NULL;
+    unsigned char* pdst[2] = {NULL, NULL};
+    int i, j, k;
+    unsigned char temp;
+
+    for (i = 0; i < bytes_perline; i += copy_bytes) {
+        pdst[0] = dest;
+        pdst[1] = dest + (height << 1);
+        psrc = source + offset;
+
+        for (j = 0; j < height; ++j) {
+            k = j % 2;
+            *((unsigned int *)pdst[k]) = *((unsigned int *)psrc);
+            if (1 == k) {
+                temp = *(pdst[0] - 1);
+                *(pdst[0] - 1) = *(pdst[1] + 1);
+                *(pdst[1] + 1) = temp;
+            }
+            pdst[k] += copy_bytes;
+            psrc -= bytes_perline;
+        }
+
+        dest += step;
+        source += copy_bytes;
+    }
+
+    memcpy(src, dst, width * height * 2);
+    free(dst);
+
+    return; 
+}
+
 static int test12(int argc, char** argv)
 {
     unsigned int N, m;
