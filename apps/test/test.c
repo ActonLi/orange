@@ -4,13 +4,19 @@
 #include <string.h>
 #include <math.h>
 
-#define TEST 12
+#include <pthread.h>
+#include <unistd.h>
+#include <semaphore.h>
+#include <sys/time.h>
+
+#define TEST 13
 
 #include "stdio.h"
 #include "string.h"
 #include "stdlib.h"
 
 
+/*
 static void __qrcode_scanner_rotate_270(unsigned char* src, int width, int height)
 {
     int copy_bytes = 4;
@@ -109,18 +115,86 @@ static void __qrcode_scanner_rotate_90(unsigned char* src, int width, int height
     free(dst);
 
     return; 
+    }
+*/
+
+#define SENDSIGTIME 10
+
+pthread_cond_t g_cond;
+pthread_mutex_t g_mutex;
+
+static void* thread1(void *arg)
+{
+    int __attribute__((unused)) inArg = (int)arg;
+    int ret = 0;
+    struct timeval now;
+    struct timespec outtime;
+
+    pthread_mutex_lock(&g_mutex);
+
+    gettimeofday(&now, NULL);
+    outtime.tv_sec = now.tv_sec + 15;
+    outtime.tv_nsec = now.tv_usec * 1000;
+
+    printf("thread1 begin %s:%d .\n", __func__, __LINE__);
+
+    ret = pthread_cond_timedwait(&g_cond, &g_mutex, &outtime);
+    pthread_mutex_unlock(&g_mutex);
+
+    printf("thread 1 running ret: %d\n", ret);
+
+    return NULL;
+}
+
+static int test13(int argc, char** argv)
+{
+    pthread_t id1;
+    int ret;
+
+    pthread_cond_init(&g_cond, NULL);
+    pthread_mutex_init(&g_mutex, NULL);
+
+    ret = pthread_create(&id1, NULL, (void *)thread1, (void *)1);
+    if (0 != ret)
+    {
+        printf("thread 1 create failed!\n");
+        return 1;
+    }
+
+    printf("等待%ds发送信号!\n", SENDSIGTIME);
+    int i = SENDSIGTIME;
+    while (i > 0) {
+        printf("%s:%d i: %d \n", __func__, __LINE__, i);
+        sleep(1);
+        i--;
+    }
+    printf("正在发送信号....\n");
+    pthread_mutex_lock(&g_mutex);
+    pthread_cond_signal(&g_cond);
+    pthread_mutex_unlock(&g_mutex);
+
+
+    pthread_join(id1, NULL);
+
+    pthread_cond_destroy(&g_cond);
+    pthread_mutex_destroy(&g_mutex);
+
+    return 0;
 }
 
 static int test12(int argc, char** argv)
 {
     unsigned int N, m;
-    scanf("%u, %u", &N, &m);
+    int ret = scanf("%u, %u", &N, &m);
+    if (ret <= 0) {
+        printf("%s:%d error.\n", __func__, __LINE__);
+    }
 
     unsigned int (*data)[3];
     data = (unsigned int (*)[3])malloc(m*3 * sizeof(unsigned int));
     int i;
     for (i = 0; i < m; i++) {
-        scanf("%u %u %u", &data[i][0], &data[i][1], &data[i][2]);
+        ret = scanf("%u %u %u", &data[i][0], &data[i][1], &data[i][2]);
     }
 
     for (i = 0; i < m; i++) {
@@ -128,7 +202,7 @@ static int test12(int argc, char** argv)
     }
 
     int max = 0, j;
-    int value = 0;
+    int __attribute__((unused))value = 0;
 
     for (i = 0; i < m; i++) {
         for(j = i + 1; j < m; j++) {
@@ -147,16 +221,17 @@ static int test12(int argc, char** argv)
 
 static int test11(int argc, char** argv)
 {
-        int count;
+    int count;
     char  (*word)[64];
-    scanf("%d", &count);
+    int __attribute__((unused)) ret = 0;
+    ret = scanf("%d", &count);
 
     word = (char(*)[64])malloc(64 * count);
     memset(word, 0, 64 * count);
     int i;
     for (i = 0; i < count; i++) {
         memset(word[i], 0, 64);
-        scanf("%s", word[i]);
+        ret = scanf("%s", word[i]);
         printf("%s\n", word[i]);
     }
 
@@ -203,7 +278,9 @@ static int test10(int argc, char** argv)
 {
     char a[2048] = "";
 
-    fgets(a, 2048, stdin);
+    char* __attribute__((unused)) ret = NULL;
+
+    ret = fgets(a, 2048, stdin);
 
     char* b = reverse(a);
     if (b) {
@@ -264,11 +341,12 @@ static int test8(int argc, char** argv)
     int count = 0;
     struct key_value* data;
     struct key_value tmp;
+    int __attribute__((unused)) ret = 0;
 
     while (scanf("%d", &count) != EOF) {
         data = malloc(count * sizeof(struct key_value));
         for (i = 0; i < count; i++) {
-            scanf("%d %d", &((data + i)->key), &((data + i)->value));
+            ret = scanf("%d %d", &((data + i)->key), &((data + i)->value));
         }
         
         for (i = 0; i < count; i++) {
@@ -426,6 +504,7 @@ static int test3(int argc, char** argv)
     int count;
     int i,j;
     int tmp;
+    int __attribute__((unused))ret = 0;
 
     while (scanf("%d", &count) != EOF) {
         int* p = malloc(count * sizeof(int));
@@ -433,7 +512,7 @@ static int test3(int argc, char** argv)
             memset(p, 0, count * sizeof(int));
         }
         for (i = 0; i < count; i++) {
-            scanf("%d", p+i);
+            ret = scanf("%d", p+i);
         }
 
         for (i = 0; i < count; i++) {
@@ -470,9 +549,9 @@ static int test2(int argc, char** argv)
     char* p = buf;
     int count = 0;
 
-    scanf("%s %c", buf, &chr);
+    int ret = scanf("%s %c", buf, &chr);
 
-    printf("buf: %s, chr: %c\n", buf, chr);
+    printf("buf: %s, chr: %c, ret: %d\n", buf, chr, ret);
 
     while (*p != 0) {
         if (*p >= 'a' && *p <= 'z') {
@@ -553,6 +632,8 @@ int main(int argc, char** argv)
             break;
         case 12:
             test12(argc, argv);
+        case 13:
+            test13(argc, argv);
             break;
     }
 

@@ -7,8 +7,8 @@ CFLAGS=-O2 -pipe -fPIC -fno-strict-aliasing -fno-common \
 			   -Wmissing-prototypes -Wpointer-arith -Winline -Wcast-qual \
 			   -Wundef -g -std=gnu9x -fstack-protector
 
-CFLAGS += -I/usr/local/include -I./
-LDFLAGS += -L./
+CFLAGS += -I/usr/local/include -I./ -I/usr/include
+LDFLAGS += -L./ -pthread
 
 all: test 
 
