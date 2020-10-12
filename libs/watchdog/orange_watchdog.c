@@ -11,7 +11,7 @@ ORANGE_VERSION_GENERATE(orange_watchdog, 1, 1, 1, ORANGE_VERSION_TYPE_ALPHA);
 static void* __orange_thread_func(void* arg)
 {
     int ret = *((int *)arg);
-	orange_log(ORANGE_LOG_INFO, "%s:%d.\n", __func__, __LINE__);
+	orange_log(ORANGE_LOG_INFO, "%s:%d ret: %d.\n", __func__, __LINE__, ret);
 }
 
 static int __orange_timeout_func(int id, void* data, int data_len)
