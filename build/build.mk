@@ -47,6 +47,7 @@ include $(TOP_DIR)/libs/socket/socket.mk
 include $(TOP_DIR)/libs/timer/timer.mk
 include $(TOP_DIR)/libs/watchdog/watchdog.mk
 include $(TOP_DIR)/libs/event/event.mk
+include $(TOP_DIR)/libs/epoll/epoll.mk
 include $(TOP_DIR)/libs/thread_pool/thread_pool.mk
 
 .PHONY: appsclean distclean libs apps all

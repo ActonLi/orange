@@ -1,0 +1,25 @@
+EPOLL_SRC_DIR	:= $(LIBS_DIR)/epoll
+
+EPOLL_TARGET_DIR	:= $(TOP_DIR)/temp/libs/epoll
+
+EPOLL_TARGET_NAME	:= orange_epoll.$(LIB_SO_SUBFIX)
+
+epoll: 
+	cd ${EPOLL_SRC_DIR} && sh ./orange_epoll_version.sh	
+	$(MS_MAKEFILE_V)printf "$(COMPILE_P) $(EPOLL_TARGET_NAME) $(NOCOLOR)\n"
+	-$(MS_MAKEFILE_V)mkdir -p $(EPOLL_TARGET_DIR)
+	$(MS_MAKEFILE_V)$(MAKE) -C $(EPOLL_SRC_DIR) CC=$(TARGET_CC) TARGET_DIR=$(EPOLL_TARGET_DIR) TARGET_NAME=$(EPOLL_TARGET_NAME)
+	cp $(EPOLL_TARGET_DIR)/$(EPOLL_TARGET_NAME) $(PUBLIC_LIB_DIR)/$(EPOLL_TARGET_NAME)
+	rm ${EPOLL_SRC_DIR}/orange_epoll_version.c
+
+epoll-clean:
+	$(MS_MAKEFILE_V)printf "$(CLEAN_P) $(EPOLL_TARGET_NAME) $(NOCOLOR)\n"
+	$(MS_MAKEFILE_V)$(MAKE) -C $(EPOLL_SRC_DIR) clean TARGET_DIR=$(EPOLL_TARGET_DIR) TARGET_NAME=$(EPOLL_TARGET_NAME)
+	-$(MS_MAKEFILE_V)rm -rf $(PUBLIC_LIB_DIR)/$(EPOLL_TARGET_NAME)
+	-$(MS_MAKEFILE_V)rm $(EPOLL_SRC_DIR)/orange_epoll_version.c
+	$(MS_MAKEFILE_V)printf  "$(COMPILE_SUCCESS_P) $(EPOLL_TARGET_NAME) success $(NOCOLOR)\n"
+
+LIBS   += epoll
+CLEANS += epoll-clean
+
+
