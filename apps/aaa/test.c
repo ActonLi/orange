@@ -7,6 +7,56 @@
 #include <sys/time.h>
 
 
+typedef struct dns_message {
+    unsigned short     id;
+    unsigned short     qtype;
+    unsigned short     qclass;
+    unsigned short     msglen;
+
+    unsigned int       malformed : 1;
+    unsigned int       qr : 1;
+    unsigned int       rd1 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd2 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd3 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd4 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd5 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd6 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd7 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd8 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd9 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd10 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd11 : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       rd12 : 1; /* set if RECUSION DESIRED bit is set */
+} dns_message_t; 
+
+typedef struct dns_message2 {
+    unsigned short     id;
+    unsigned short     qtype;
+    unsigned short     qclass;
+    unsigned short     msglen;
+
+    unsigned int       malformed : 1;
+    unsigned int       qr : 1;
+    unsigned int       rd : 1; /* set if RECUSION DESIRED bit is set */
+    unsigned int       aa : 1; /* set if AUTHORITATIVE ANSWER bit is set */
+    unsigned int       tc : 1; /* set if TRUNCATED RESPONSE bit is set */
+    unsigned int       ad : 1; /* set if AUTHENTIC DATA bit is set */
+} dns_message2_t; 
+
+typedef struct dns_message1 {
+    unsigned short     id;
+    unsigned short     qtype;
+    unsigned short     qclass;
+    unsigned short     msglen;
+
+    unsigned int       malformed;
+    unsigned int       qr;
+    unsigned int       rd; /* set if RECUSION DESIRED bit is set */
+    unsigned int       aa; /* set if AUTHORITATIVE ANSWER bit is set */
+    unsigned int       tc; /* set if TRUNCATED RESPONSE bit is set */
+    unsigned int       ad; /* set if AUTHENTIC DATA bit is set */
+} dns_message1_t; 
+
 typedef void (*printfunc_t)(int);
 
 static void __print(int ret)
@@ -71,7 +121,18 @@ int main(int argc, char** argv)
             printf("%s\n", strs[i]);
         }
     }
-    
+
+    struct dns_message2  xxx;
+
+    xxx.malformed  = 0;
+    xxx.qr  = 1;
+    xxx.rd  = 0;
+
+    printf("malformed: %d, qr: %d, rd: %d\n", xxx.malformed, xxx.qr, xxx.rd);
+
+    printf("sizeof(struct dns_message): %lu\n", sizeof(struct dns_message));
+    printf("sizeof(struct dns_message1): %lu\n", sizeof(struct dns_message1));
+    printf("sizeof(struct dns_message2): %lu\n", sizeof(struct dns_message2));
 
     return 0;
 }
