@@ -10,6 +10,9 @@ CFLAGS=-O2 -pipe -fPIC -fno-strict-aliasing -fno-common \
 CFLAGS += -I/usr/local/include -I./ -I/usr/include
 LDFLAGS += -L./ -pthread
 
+CC := aarch64-linux-gnu-gcc
+CXX := aarch64-linux-gnu-cpp
+
 all: test 
 
 OBJS = test.o

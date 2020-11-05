@@ -125,7 +125,7 @@ pthread_mutex_t g_mutex;
 
 static void* thread1(void *arg)
 {
-    int __attribute__((unused)) inArg = (int)arg;
+    //int __attribute__((unused)) inArg = (int)arg;
     int ret = 0;
     struct timeval now;
     struct timespec outtime;
