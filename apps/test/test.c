@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include <sys/time.h>
+#include <arpa/inet.h>
+
 
 #define TEST 13
 
@@ -150,6 +152,20 @@ static int test13(int argc, char** argv)
 {
     pthread_t id1;
     int ret;
+    int a = -49;
+    int b = ntohl(a);
+    int c = ntohl(b);
+    short a1 = -1;
+    unsigned short a2 = ntohl(a1);
+    short a3 = a2;
+    int a4 = a2;
+    int a5 = a3;
+    char *str = "-100";
+    int num = atoi(str);
+
+
+    printf("a: %d, b: %d, c: %d, num: %d\n", a, b, c, num);
+    printf("a1: %d, a2: %d a3: %d, a4: %d, a5: %d\n", a1, a2, a3, a4, a5);
 
     pthread_cond_init(&g_cond, NULL);
     pthread_mutex_init(&g_mutex, NULL);
