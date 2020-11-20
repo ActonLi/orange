@@ -39,7 +39,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
-#include <sys/sysctl.h>
+//#include <sys/sysctl.h>
 #include <sys/sysinfo.h>
 #include <sys/time.h>
 #include <sys/types.h>
