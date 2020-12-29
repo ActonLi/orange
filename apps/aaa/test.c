@@ -92,6 +92,14 @@ static void* thread3(void *arg)
     return NULL;
 }
 
+#define LEN_MAX 128
+#define CNT_MAX 8
+
+typedef struct queue_info {
+    int cnt;
+    char (*data)[LEN_MAX];
+} queue_info_t; 
+
 int main(int argc, char** argv)
 {
     char strs[3][64] = {"apple", "apple", "banana"};
@@ -106,6 +114,18 @@ int main(int argc, char** argv)
     pthread_join(id3, NULL);
     int i, j;
     int count;
+
+    struct queue_info qi;
+    qi.data = (char(*)[LEN_MAX])malloc(LEN_MAX * CNT_MAX);
+    printf("%s:%d sizeof(data): %lu\n", __func__, __LINE__, sizeof(qi.data));
+
+    for (i = 0; i < CNT_MAX; i++) {
+        snprintf(qi.data[i], LEN_MAX, "orange-%d", i + 1);
+    }
+     
+    for (i = 0; i < CNT_MAX; i++) {
+        printf("%s\n", qi.data[i]);
+    }
      
     for (i = 0; i < 3; i++) {
         count = 0;
