@@ -100,10 +100,106 @@ typedef struct queue_info {
     char (*data)[LEN_MAX];
 } queue_info_t; 
 
+#define SQL_DATA_LEN_MAX 8192
+#define SQL_DATA_DATA_MAX 256
+
+typedef struct dataEntry {
+    int iModuleType;
+    int usDataLen;
+    char arrData[SQL_DATA_LEN_MAX];
+} TdataEntry;
+
+typedef struct dataCache {
+    unsigned int uiCnt;
+    unsigned int timestamp; 
+    struct dataEntry* tData;
+} TdataCache;
+
+static struct dataCache g_dataCache; 
+
+static int updateCompareUTCTimeStringWithCurrentTime(char* utcTimeString)
+{
+    time_t now = time(&now);
+    struct tm* ptm = gmtime(&now);
+    char currentTimeString[64] = {0};
+
+    snprintf(currentTimeString, sizeof(currentTimeString), "%.4d-%.2d-%.2d %.2d:%.2d:%.2d", 
+            ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, 
+            ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+
+
+    return strcmp(utcTimeString, currentTimeString);
+}
+
+static char* ConvertUTCToLocalTime(const char* src_time, char* dst_time)
+{
+    struct tm t;
+    char* dst = NULL;
+    struct tm* tTime = NULL;
+
+    if (NULL == src_time || NULL == dst_time) {
+        goto exit;
+    }
+
+    printf("%s:%d src time: %s\n", __func__, __LINE__, src_time);
+
+    memset(&t, 0, sizeof(t));
+    t.tm_year = atoi(src_time) - 1900;
+    t.tm_mon = atoi(src_time + 5) - 1;
+    t.tm_mday = atoi(src_time + 8);
+    t.tm_hour = atoi(src_time + 11);
+    t.tm_min = atoi(src_time + 14);
+    t.tm_sec = atoi(src_time + 17);
+
+    time_t tt = mktime(&t);
+    if (-1 == tt) {
+        goto exit;
+    }
+
+    time_t now = time(&now);
+
+    struct tm* ptm = gmtime(&now);
+
+    struct timeval tv;
+    struct timezone tz;
+    gettimeofday (&tv, &tz);
+    struct tm* xx = gmtime(&tv.tv_sec);
+
+    printf("UTC time: %s", asctime(ptm));
+    printf("UTC time1: %s", asctime(xx));
+
+    sprintf(dst_time, "%.4d-%.2d-%.2d %.2d:%.2d:%.2d", 
+            ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, 
+            ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+    printf("%s:%d utc time: %s\n", __func__, __LINE__, dst_time);
+
+    tTime = localtime(&tt); 
+    sprintf(dst_time, "%.4d-%.2d-%.2d %.2d:%.2d:%.2d", 
+            tTime->tm_year + 1900, tTime->tm_mon + 1, tTime->tm_mday, 
+            tTime->tm_hour, tTime->tm_min, tTime->tm_sec);
+
+    printf("%s:%d dst time time: %s\n", __func__, __LINE__, dst_time);
+    dst = dst_time;
+exit:
+    return dst;
+}
+
 int main(int argc, char** argv)
 {
     char strs[3][64] = {"apple", "apple", "banana"};
     pthread_t id1, id2, id3;
+
+    char localtime[64] = "";
+
+    if (updateCompareUTCTimeStringWithCurrentTime(argv[1]) <= 0) {
+        printf("time is up\n");
+    }
+    else {
+        printf("time is not up\n");
+    }
+    printf("localtime: %s\n", ConvertUTCToLocalTime(argv[1], localtime));
+
+    exit(0);
 
     pthread_create(&id1, NULL, (void *)thread1, (void *)__print);
     pthread_create(&id2, NULL, (void *)thread2, (void *)__print);
@@ -114,6 +210,20 @@ int main(int argc, char** argv)
     pthread_join(id3, NULL);
     int i, j;
     int count;
+
+    g_dataCache.tData = (struct dataEntry *)malloc(SQL_DATA_DATA_MAX * sizeof(struct dataEntry));
+    if (g_dataCache.tData) {
+        for (i = 0; i < SQL_DATA_DATA_MAX; i++) {
+            g_dataCache.tData[i].iModuleType = 1;
+            g_dataCache.tData[i].usDataLen = snprintf(g_dataCache.tData[i].arrData, SQL_DATA_LEN_MAX, "dsaffffffffsadf_%d", i+1);
+            g_dataCache.uiCnt += 1;
+        }
+
+        for (i = 0; i < g_dataCache.uiCnt; i++) {
+            printf("%s:%d length: %d, type: %d, data: %s\n", __func__, __LINE__, 
+                    g_dataCache.tData[i].usDataLen, g_dataCache.tData[i].iModuleType, g_dataCache.tData[i].arrData);
+        }
+    }
 
     struct queue_info qi;
     qi.data = (char(*)[LEN_MAX])malloc(LEN_MAX * CNT_MAX);
