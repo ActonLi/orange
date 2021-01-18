@@ -8,7 +8,7 @@ CFLAGS=-O2 -pipe -fPIC -fno-strict-aliasing -fno-common \
 			   -Wundef -g -std=gnu9x -fstack-protector
 
 CFLAGS += -I/usr/local/include -I./
-LDFLAGS += -L./
+LDFLAGS += -L/usr/lib -L/lib -L/usr/local/lib -pthread
 
 all: test 
 
