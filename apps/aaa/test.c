@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include <sys/time.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <string.h>
 
 
 typedef struct dns_message {
@@ -184,12 +187,61 @@ exit:
     return dst;
 }
 
+static int DeleteDir(const char* path) 
+{
+
+    DIR* dp = NULL;
+    DIR* dpIn = NULL;
+
+    printf("%s:%d dir: %s\n", __func__, __LINE__, path);
+
+    char pathName[512];
+    struct dirent* pDir;
+
+    if (NULL == path) {
+        return -1;
+    }
+
+    dp = opendir(path);
+    if (NULL == dp) {
+        return -1;
+    }
+
+    while(NULL != (pDir = readdir(dp))) {
+        if (0 == strcmp(pDir->d_name, "..") || 0 == strcmp(pDir->d_name, ".")) {
+            continue;
+        }
+
+        snprintf(pathName, sizeof(pathName), "%s/%s", path, pDir->d_name);
+        dpIn = opendir(pathName);
+        if (NULL != dpIn) {
+            DeleteDir(pathName);
+        } else {
+            unlink(pathName);
+        }
+        closedir(dpIn);
+        dpIn = NULL;
+    }
+
+    rmdir(path);
+    closedir(dp);
+
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
     char strs[3][64] = {"apple", "apple", "banana"};
     pthread_t id1, id2, id3;
 
     char localtime[64] = "";
+
+    unlink(argv[1]);
+    exit(0);
+
+    DeleteDir(argv[1]);
+
+    exit(0);
 
     if (updateCompareUTCTimeStringWithCurrentTime(argv[1]) <= 0) {
         printf("time is up\n");
