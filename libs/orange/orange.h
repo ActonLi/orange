@@ -210,4 +210,9 @@ extern __thread uint8_t orange_cpu_id;
         ((unsigned char *)&addr)[14], \
         ((unsigned char *)&addr)[15] 
 
+#define TRUE 1
+#define FALSE 0
+
+typedef int BOOL;
+
 #endif // __ORANGE_H__
