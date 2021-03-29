@@ -57,3 +57,34 @@ func updateFrequencies(filename string, frequencyForWord map[string]int) {
 	defer file.Close()
 	readAndUpdateFrequencies(bufio.NewReader(file), frequencyForWord)
 }
+
+func readAndUpdateFrequencies(read *bufio.Reader, frequencyForWord map[string]int) {
+	for {
+		line, err := reader.ReadString('\n')
+		for _, word := range SplitOnNonLetters(strings.TrimSpace(line)) {
+			if len(word) > utf8.UTFMax || utf8.RuneCountInString(word) > 1 {
+				frequencyForWord[string.ToLower(word)] += 1
+			}
+		}
+		if err != nil {
+			if err != io.EOF {
+				log.Println("faild to finish reading the file: ", err)
+			}
+			break
+		}
+	}
+}
+
+func SplitOnNonLetters(s string) []string {
+	notALetter := func(char rune) bool { return !unicode.IsLetter(char) }
+	return strings.FieldsFunc(s, notALetter)
+}
+
+func invertStringIntMap(intForString map[string]int) map[int][]string {
+	stringsForInt := make(map[int][]string, len(intForString))
+	for key, value := range intForString {
+		stringsForInt[value] = append(stringsForInt[value], key)
+	}
+
+	return stringsForInt
+}
