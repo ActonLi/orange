@@ -235,6 +235,13 @@ int main(int argc, char** argv)
     pthread_t id1, id2, id3;
 
     char localtime[64] = "";
+    char line[128] = "xxxx";
+
+    printf("line: %s\n", line);
+
+    memset(&line, 0, 128);
+
+    printf("line: %s\n", line);
 
     unlink(argv[1]);
     exit(0);
