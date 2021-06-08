@@ -187,6 +187,55 @@ exit:
     return dst;
 }
 
+static void remove_space_and_tab(char *buf)
+{
+    char ch;
+    char *src_ptr;
+    char *dst_ptr;
+    int  head = 1;
+    int bracket = 0;
+
+    src_ptr = dst_ptr = buf;   
+    ch = *src_ptr;
+    while(ch != '\0'){
+        if(head)
+        {            
+            if(ch == '\t' || ch == ' ')
+            {
+                src_ptr++;
+                ch = *src_ptr;
+                continue;
+            }
+        }
+        if(!bracket){
+            if(ch == '\t' || ch == ' '){
+                src_ptr++;
+                ch = *src_ptr;
+                continue;
+            }
+        }
+        if(ch == '[')
+        {
+            bracket++;
+
+        }
+
+        if(ch == ']'){
+            bracket--;
+        }
+
+        if(ch != 0x0a && ch != 0x0d)
+        {
+            *dst_ptr = ch;
+            dst_ptr++;
+            head = 0;
+        }
+        src_ptr++;
+        ch = *src_ptr;
+    }
+    *dst_ptr = 0;
+}
+
 static int DeleteDir(const char* path) 
 {
 
