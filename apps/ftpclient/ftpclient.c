@@ -23,7 +23,7 @@
 #define SERVER_PORT 21
 #define BUF_SIZE 4096
 #define CYGNUM_NET_FTPCLIENT_BUFSIZE 512
-char buf[BUF_SIZE] = "orange test.";
+//char buf[BUF_SIZE] = "orange test.";
 
 /* Build one command to send to the FTP server */
     static int 
@@ -390,7 +390,6 @@ opendatasock(int ctrl_s,
 /* Receive the file into the buffer and close the data socket
    afterwards */
 
-#if 0
     static int 
 receive_file(int data_s, ftp_write_t ftp_write, void *ftp_write_priv)
 {
@@ -419,6 +418,8 @@ receive_file(int data_s, ftp_write_t ftp_write, void *ftp_write_priv)
             return FTP_BAD;   
         }
 
+        printf("%s:%d len: %d, buf: %s\n", __func__, __LINE__, len, buf);
+
         if (len == 0) {
             finished = 1;
         } else {
@@ -437,7 +438,6 @@ receive_file(int data_s, ftp_write_t ftp_write, void *ftp_write_priv)
     free(buf);
     return total_size;
 }
-#endif
 
 /* Receive the file into the buffer and close the socket afterwards*/
     static int 
@@ -530,12 +530,12 @@ static int _ftp_read(char *buf, int len, void *priv)
     return res;
 }
 
-#if 0
 static int _ftp_write(char *buf, int len, void *priv)
 {
     struct _ftp_data *dp = (struct _ftp_data *)priv;
     int res = 0;
 
+    printf("%s:%d begin\n", __func__, __LINE__);
     // FTP data channel has 'len' bytes that have been read.
     // Move into 'buf', respecting the max size of 'buf'
     if (dp->len < dp->max_len) {
@@ -547,9 +547,9 @@ static int _ftp_write(char *buf, int len, void *priv)
         dp->buf += len;
         dp->len += res;
     }
+    printf("%s:%d end\n", __func__, __LINE__);
     return res;
 }
-#endif
 
 /* Put a file on an FTP server. Hostname is the name/IP address of the
    server. username is the username used to connect to the server
@@ -676,6 +676,109 @@ int ftp_put_var(char *hostname,
     return 0;
 }
 
+static int ftp_get_var(char *hostname, char *username, char *passwd, char *filename, ftp_write_t ftp_write, void *ftp_write_priv)
+{
+
+  struct sockaddr local;
+  char msgbuf[256];
+  int s,data_s;
+  int bytes;
+  int ret;
+
+  printf("%s:%d begin\n", __func__, __LINE__);
+
+  s = connect_to_server(hostname,&local);
+  if (s < 0) {
+      printf("%s:%d \n", __func__, __LINE__);
+    return (s);
+  }
+
+  printf("%s:%d \n", __func__, __LINE__);
+  /* Read the welcome message from the server */
+  if (get_reply(s) != 2) {
+      printf("%s:%d \n", __func__, __LINE__);
+    close(s);
+    return FTP_BAD;
+  }
+
+  printf("%s:%d \n", __func__, __LINE__);
+  ret = login(username,passwd,s,msgbuf,sizeof(msgbuf));
+  if (ret < 0) {
+    close(s);
+    printf("%s:%d \n", __func__, __LINE__);
+    return (ret);
+  }
+  printf("%s:%d \n", __func__, __LINE__);
+
+  /* We are now logged in and ready to transfer the file. Open the
+     data socket ready to receive the file. It also build the PORT
+     command ready to send */
+  data_s = opendatasock(s,&local,msgbuf,sizeof(msgbuf));
+  if (data_s < 0) {
+    close (s);
+    printf("%s:%d \n", __func__, __LINE__);
+    return (data_s);
+  }
+
+  printf("%s:%d \n", __func__, __LINE__);
+  /* Ask for the file */
+  ret = command("RETR",filename,s,msgbuf,sizeof(msgbuf));
+  if (ret < 0) {
+    close(s);
+    printf("%s:%d \n", __func__, __LINE__);
+    close(data_s);
+    return (ret);
+  }
+
+  printf("%s:%d \n", __func__, __LINE__);
+  if (ret != 1) {
+    close (data_s);
+    close(s);
+    printf("%s:%d \n", __func__, __LINE__);
+    return (FTP_BADFILENAME);
+  }
+
+  printf("%s:%d \n", __func__, __LINE__);
+  if ((bytes=receive_file(data_s,ftp_write,ftp_write_priv)) < 0) {
+    close (data_s);
+    close(s);
+    printf("%s:%d \n", __func__, __LINE__);
+    return (bytes);
+  }
+
+  printf("%s:%d \n", __func__, __LINE__);
+  if (get_reply(s) != 2) {
+    close (data_s);
+    close(s);
+    printf("%s:%d \n", __func__, __LINE__);
+    return (FTP_BAD);
+  }
+  printf("%s:%d \n", __func__, __LINE__);
+
+  ret = quit(s,msgbuf,sizeof(msgbuf));
+  if (ret < 0) {
+    close(s);
+    close(data_s);
+    printf("%s:%d \n", __func__, __LINE__);
+    return (ret);
+  }
+
+  printf("%s:%d \n", __func__, __LINE__);
+  close (data_s);
+  close(s);
+  return bytes;
+}
+
+static int ftp_get(char * hostname, char * username, char * passwd, char * filename, char * buf, unsigned buf_size)
+{
+    struct _ftp_data ftp_data;
+
+    ftp_data.buf = buf;
+    ftp_data.len = 0;
+    ftp_data.max_len = buf_size;
+    return ftp_get_var(hostname, username, passwd, filename, _ftp_write, &ftp_data);
+}
+
 int main(int argc, char** argv)
 {
     char *buf = NULL;
@@ -704,5 +807,15 @@ int main(int argc, char** argv)
 
     close(fd);
 
-    return ftp_put("192.168.110.138", "anonymous", "", "modules.conf", buf, buf_size);
+    ftp_put("192.168.110.138", "anonymous", "", "modules.conf", buf, buf_size);
+    free(buf);
+
+    buf = malloc(8192);
+    buf_size = 8192;
+
+    memset(buf, 0, 8192);
+
+    ftp_get("192.168.110.138", "anonymous", "", "running-config", buf, buf_size);
+
+    printf("%s:%d buf: %s\n", __func__, __LINE__, buf);
 }
