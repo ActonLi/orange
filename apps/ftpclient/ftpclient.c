@@ -575,6 +575,62 @@ static int _ftp_write(char *buf, int len, void *priv)
     return res;
 }
 
+static int ftp_rename(char* hostname, char* username, char* passwd, char* src, char* dst)
+{
+    struct sockaddr local;
+    char msgbuf[256];
+    int s;
+    int ret;
+
+    s = connect_to_server(hostname,&local);
+    if (s < 0) {
+        printf("%s:%d connect to server error.\n", __func__, __LINE__);
+        return (s);
+    }
+
+    if (get_reply(s) != 2) {
+        printf("FTP: Server refused connection\n");
+        close(s);
+        return FTP_BAD;
+    }
+
+    printf("%s:%d get reply suc.\n", __func__, __LINE__);
+
+    ret = login(username,passwd,s,msgbuf,sizeof(msgbuf));
+    if (ret < 0) {
+        close(s);
+        return (ret);
+    }
+
+    printf("%s:%d \n", __func__, __LINE__);
+    ret = command("RNFR",src,s,msgbuf,sizeof(msgbuf));
+    if (ret < 0) {
+        close(s);
+        printf("%s:%d \n", __func__, __LINE__);
+        return (ret);
+    }
+
+    printf("%s:%d \n", __func__, __LINE__);
+    ret = command("RNTO",dst,s,msgbuf,sizeof(msgbuf));
+    if (ret < 0) {
+        close(s);
+        printf("%s:%d \n", __func__, __LINE__);
+        return (ret);
+    }
+
+#if 0
+    printf("%s:%d \n", __func__, __LINE__);
+    ret = command("DELE",src,s,msgbuf,sizeof(msgbuf));
+    if (ret < 0) {
+        close(s);
+        printf("%s:%d \n", __func__, __LINE__);
+        return (ret);
+    }
+#endif
+
+    return ret;
+}
+
 static int ftp_list(char* hostname, char* username, char* passwd, char* dir)
 {
     struct sockaddr local;
@@ -897,7 +953,9 @@ int main(int argc, char** argv)
 
     close(fd);
 
-    ftp_list("192.168.110.138", "anonymous", "", NULL);
+    ftp_rename("192.168.110.138", "anonymous", "", "modules.conf", "modules.conf.1");
+
+    ftp_list("192.168.110.138", "anonymous", "", "aspnet_client/system_web");
 
     ftp_put("192.168.110.138", "anonymous", "", "modules.conf", buf, buf_size);
     free(buf);
